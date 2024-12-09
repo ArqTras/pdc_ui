@@ -161,7 +161,7 @@ import { takeUntil } from 'rxjs/operators';
                                 {{ marketplaceConfirmHash }}
                                 <mat-icon
                                     (click)="copyHash()"
-                                    [svgIcon]="copyAnimation ? 'zano-check' : 'zano-copy'"
+                                    [svgIcon]="copyAnimation ? 'pdc-check' : 'pdc-copy'"
                                     class="ml-1"
                                 ></mat-icon>
                             </div>
@@ -262,7 +262,7 @@ export class DeeplinkModalComponent implements OnInit, OnDestroy {
         const spaceSymbolRex = new RegExp(/%20/g);
         const newObj = {};
 
-        const newString = deeplink.substr(5); // delete zano:;
+        const newString = deeplink.substr(5); // delete pdc:;
         newString.split('&').forEach(str => {
             const [key, value] = str.split('=');
             newObj[key] = value.replace(quotesRex, '').replace(spaceSymbolRex, ' ').trim();
@@ -292,7 +292,7 @@ export class DeeplinkModalComponent implements OnInit, OnDestroy {
                 lci: '',
                 lco: 'World Wide',
                 ot: 1,
-                pt: 'Credit cards, BTC, ZANO, ETH',
+                pt: 'Credit cards, BTC, PDC, ETH',
                 t: this.actionData.title || '',
                 url: this.actionData.url || this.actionData.img_url || '',
             },

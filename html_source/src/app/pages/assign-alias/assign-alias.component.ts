@@ -10,7 +10,7 @@ import BigNumber from 'bignumber.js';
 import { Subject } from 'rxjs';
 import { hasOwnProperty } from '@parts/functions/has-own-property';
 import { takeUntil } from 'rxjs/operators';
-import { regExpAliasName } from '@parts/utils/zano-validators';
+import { regExpAliasName } from '@parts/utils/pdc-validators';
 import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.models';
 
 @Component({
@@ -211,7 +211,7 @@ export class AssignAliasComponent implements OnInit, OnDestroy {
                                         if (statusPrice) {
                                             this.alias.price = BigNumber.sum(dataPrice['coast'], this.variablesService.default_fee_big);
                                         }
-                                        const unlocked_balance = new BigNumber(this.wallet.getBalanceByTicker('ZANO')?.unlocked || 0);
+                                        const unlocked_balance = new BigNumber(this.wallet.getBalanceByTicker('PDC')?.unlocked || 0);
                                         this.notEnoughMoney = this.alias.price.isGreaterThan(unlocked_balance);
                                         this.alias.reward = this.intToMoney.transform(this.alias.price);
                                         this.alias.rewardOriginal = this.intToMoney.transform(dataPrice['coast']);

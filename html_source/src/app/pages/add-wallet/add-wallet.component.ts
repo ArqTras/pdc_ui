@@ -4,7 +4,7 @@ import { VariablesService } from '@parts/services/variables.service';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { CREATE_NEW_WALLET_HELP_PAGE } from '@parts/data/constants';
-import { filePathWalletValidator } from '@parts/utils/zano-validators';
+import { filePathWalletValidator } from '@parts/utils/pdc-validators';
 import { ModalService } from '@parts/services/modal.service';
 
 @Component({

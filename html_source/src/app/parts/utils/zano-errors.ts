@@ -1,25 +1,25 @@
 import { ValidationErrors } from '@angular/forms';
 
-export interface ZanoValidationErrors extends ValidationErrors {
+export interface PdcValidationErrors extends ValidationErrors {
     errorText: string;
 }
 
-export const wrongAssetId: ZanoValidationErrors = {
+export const wrongAssetId: PdcValidationErrors = {
     errorText: 'ASSETS.FORM.ERRORS.WRONG_ASSET_ID',
 };
 
-export const wrongPassword: ZanoValidationErrors = {
+export const wrongPassword: PdcValidationErrors = {
     errorText: 'Incorrect password',
 };
 
-export const insuficcientFunds: ZanoValidationErrors = {
+export const insuficcientFunds: PdcValidationErrors = {
     errorText: 'ERRORS.INSUFFICIENT_FUNDS',
 };
 
-export const assetHasNotBeenAddedToWallet: ZanoValidationErrors = {
+export const assetHasNotBeenAddedToWallet: PdcValidationErrors = {
     errorText: 'ERRORS.ASSET_HAS_NOT_BEEN_ADDED_TO_WALLET',
 };
 
-export const notFileZanoWallet: ZanoValidationErrors = {
-    errorText: 'ERRORS.NOT_FILE_ZANO_WALLET',
+export const notFilePdcWallet: PdcValidationErrors = {
+    errorText: 'ERRORS.NOT_FILE_PDC_WALLET',
 };

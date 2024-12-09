@@ -1,4 +1,4 @@
-<ng-container *ngIf="isInitiator(transaction) && !hasZano(transaction.subtransfers)">
+<ng-container *ngIf="isInitiator(transaction) && !hasPdc(transaction.subtransfers)">
     <div [ngClass]="'received'" class="status text-ellipsis" fxLayout="row" fxLayoutAlign=" center">
         <img alt="" class="status-transaction mr-1" src="assets/icons/aqua/receive.svg" />
 

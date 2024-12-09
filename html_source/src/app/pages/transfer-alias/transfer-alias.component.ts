@@ -173,7 +173,7 @@ export class TransferAliasComponent implements OnInit {
             comment: alias.comment,
             tracking_key: alias.tracking_key,
         };
-        const unlocked_balance = new BigNumber(this.wallet.getBalanceByTicker('ZANO')?.unlocked || 0);
+        const unlocked_balance = new BigNumber(this.wallet.getBalanceByTicker('PDC')?.unlocked || 0);
         this.notEnoughMoney = unlocked_balance.isLessThan(this.variablesService.default_fee_big);
     }
 

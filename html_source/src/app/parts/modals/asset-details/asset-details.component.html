@@ -28,8 +28,8 @@
                     <td>{{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.CURRENT_SUPPLY' | translate }}</td>
                     <td>
                         {{
-                            (asset_info.asset_id === zanoAssetInfo.asset_id
-                                ? variablesService.zano_current_supply ?? 'Unknown'
+                            (asset_info.asset_id === pdcAssetInfo.asset_id
+                                ? variablesService.pdc_current_supply ?? 'Unknown'
                                 : asset_info.current_supply
                             ) | intToMoney : asset_info.decimal_point
                         }}
@@ -39,7 +39,7 @@
                     <td>{{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.MAX_SUPPLE' | translate }}</td>
                     <td>
                         {{
-                            asset_info.asset_id === zanoAssetInfo.asset_id
+                            asset_info.asset_id === pdcAssetInfo.asset_id
                                 ? 'Uncapped'
                                 : (asset_info.total_max_supply | intToMoney : asset_info.decimal_point)
                         }}

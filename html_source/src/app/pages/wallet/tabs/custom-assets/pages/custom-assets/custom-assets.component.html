@@ -1,7 +1,7 @@
 <div [ngClass]="{ center: !assets.length }" class="container">
     <ng-container *ngIf="assets.length; else emptyTemplate">
         <div class="scrolled-content mb-2" fxFlex="1 1 auto">
-            <table class="zano-table">
+            <table class="pdc-table">
                 <thead>
                     <tr>
                         <th>
@@ -44,7 +44,7 @@
                     <ng-container *ngFor="let asset of assets | paginate : paginateArgs; trackBy: trackByAssets">
                         <tr>
                             <td (contextmenu)="variablesService.onContextMenuOnlyCopy($event, asset.asset_id)">
-                                {{ asset.asset_id | zanoShortString }}
+                                {{ asset.asset_id | pdcShortString }}
                             </td>
                             <td>{{ asset.ticker }}</td>
                             <td>{{ asset.full_name }}</td>
@@ -61,7 +61,7 @@
                                         class="btn-icon circle row-options small ml-auto"
                                         type="button"
                                     >
-                                        <mat-icon class="small" svgIcon="zano-row-options"></mat-icon>
+                                        <mat-icon class="small" svgIcon="pdc-row-options"></mat-icon>
                                     </button>
                                 </div>
                             </td>
@@ -84,7 +84,7 @@
             class="ngx-pagination custom-pagination"
         >
             <button (click)="p.previous()" [disabled]="p.isFirstPage()" class="pagination-previous btn-icon circle small mr-0_5">
-                <mat-icon svgIcon="zano-arrow-left"></mat-icon>
+                <mat-icon svgIcon="pdc-arrow-left"></mat-icon>
             </button>
 
             <div *ngFor="let page of p.pages; trackBy: trackByPages" [class.current]="p.getCurrent() === page.value" class="mr-0_5">
@@ -97,7 +97,7 @@
             </div>
 
             <button (click)="p.next()" [disabled]="p.isLastPage()" class="pagination-next btn-icon circle small">
-                <mat-icon svgIcon="zano-arrow-right"></mat-icon>
+                <mat-icon svgIcon="pdc-arrow-right"></mat-icon>
             </button>
         </pagination-template>
     </ng-container>
@@ -122,25 +122,25 @@
     <ul (click)="closeDropDownMenu()" class="list">
         <li class="item">
             <button (click)="openDialog('assetDetails')" class="w-100 px-2 py-1" type="button">
-                <mat-icon svgIcon="zano-info-v2" class="mr-1"></mat-icon>
+                <mat-icon svgIcon="pdc-info-v2" class="mr-1"></mat-icon>
                 <span>{{ 'CUSTOM_ASSETS.DROP_MENU.LABELS.LABEL1' | translate }}</span>
             </button>
         </li>
         <li class="item">
             <button (click)="openDialog('emit')" class="w-100 px-2 py-1" type="button">
-                <mat-icon svgIcon="zano-emit" class="mr-1"></mat-icon>
+                <mat-icon svgIcon="pdc-emit" class="mr-1"></mat-icon>
                 <span>{{ 'CUSTOM_ASSETS.DROP_MENU.LABELS.LABEL2' | translate }}</span>
             </button>
         </li>
         <li class="item">
             <button (click)="openDialog('update')" class="w-100 px-2 py-1" type="button">
-                <mat-icon svgIcon="zano-update" class="mr-1"></mat-icon>
+                <mat-icon svgIcon="pdc-update" class="mr-1"></mat-icon>
                 <span>{{ 'CUSTOM_ASSETS.DROP_MENU.LABELS.LABEL3' | translate }}</span>
             </button>
         </li>
         <li class="item">
             <button (click)="openDialog('burn')" class="w-100 px-2 py-1" type="button">
-                <mat-icon svgIcon="zano-burn" class="mr-1"></mat-icon>
+                <mat-icon svgIcon="pdc-burn" class="mr-1"></mat-icon>
                 <span>{{ 'CUSTOM_ASSETS.DROP_MENU.LABELS.LABEL4' | translate }}</span>
             </button>
         </li>

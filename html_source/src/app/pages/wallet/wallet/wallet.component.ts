@@ -32,7 +32,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     assets: {
         id: 'assets',
         title: 'WALLET.TABS.ASSETS',
-        icon: 'zano-balance',
+        icon: 'pdc-balance',
         link: '/assets',
         disabled: false,
         hidden: false,
@@ -40,7 +40,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     history: {
         id: 'history',
         title: 'WALLET.TABS.HISTORY',
-        icon: 'zano-history',
+        icon: 'pdc-history',
         link: '/history',
         disabled: false,
         hidden: false,
@@ -48,7 +48,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     send: {
         id: 'send',
         title: 'WALLET.TABS.SEND',
-        icon: 'zano-send',
+        icon: 'pdc-send',
         link: '/send',
         disabled: false,
         hidden: false,
@@ -56,7 +56,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     receive: {
         id: 'receive',
         title: 'WALLET.TABS.RECEIVE',
-        icon: 'zano-receive',
+        icon: 'pdc-receive',
         link: '/receive',
         disabled: false,
         hidden: false,
@@ -64,12 +64,12 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     swap: {
         id: 'swap',
         title: 'Swap',
-        icon: 'zano-swap',
+        icon: 'pdc-swap',
         link: '/swap',
         disabled: false,
         hidden: true,
     },
-    // TODO: https://github.com/hyle-team/zano/issues/374
+    // TODO: https://github.com/hyle-team/pdc/issues/374
     // contract: {
     //     title: 'WALLET.TABS.CONTRACTS',
     //     icon: 'document',
@@ -80,7 +80,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     staking: {
         id: 'staking',
         title: 'WALLET.TABS.STAKING',
-        icon: 'zano-staking',
+        icon: 'pdc-staking',
         link: '/staking',
         indicator: false,
         disabled: false,
@@ -89,7 +89,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     'custom-assets': {
         id: 'custom-assets',
         title: 'WALLET.TABS.CONTROL_ASSETS',
-        icon: 'zano-custom-asset',
+        icon: 'pdc-custom-asset',
         link: '/custom-assets',
         indicator: false,
         disabled: false,

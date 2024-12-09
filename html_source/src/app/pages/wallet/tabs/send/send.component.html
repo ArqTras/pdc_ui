@@ -31,9 +31,9 @@
                         type="text"
                     />
 
-                    <mat-autocomplete #auto="matAutocomplete" class="zano-autocomplete-panel">
+                    <mat-autocomplete #auto="matAutocomplete" class="pdc-autocomplete-panel">
                         <mat-option *ngIf="vm.loading" class="loading" disabled>
-                            <zano-loader class="mx-auto" style="display: block; width: fit-content"></zano-loader>
+                            <pdc-loader class="mx-auto" style="display: block; width: fit-content"></pdc-loader>
                         </mat-option>
 
                         <mat-option
@@ -58,7 +58,7 @@
                                 </ng-container>
                                 <!-- Address -->
                                 <ng-template #itemAddressTemplate>
-                                    <span class="pl-1">{{ item | zanoShortString }}</span>
+                                    <span class="pl-1">{{ item | pdcShortString }}</span>
                                 </ng-template>
                             </mat-option>
                         </ng-container>
@@ -69,7 +69,7 @@
                     </div>
 
                     <div *ngIf="aliasAddress" class="info text-ellipsis">
-                        <span>{{ aliasAddress | zanoShortString }}</span>
+                        <span>{{ aliasAddress | pdcShortString }}</span>
                     </div>
                 </div>
             </ng-container>
@@ -94,7 +94,7 @@
 
                 <button (click)="toggleAmountUSD()" [disabled]="amountInputParams.reverseDisabled" class="btn-reverse"
                         type="button">
-                    <mat-icon class="small" svgIcon="zano-swap"></mat-icon>
+                    <mat-icon class="small" svgIcon="pdc-swap"></mat-icon>
                 </button>
 
                 <div
@@ -147,7 +147,7 @@
             <div *ngIf="wrapInfo && !(loadingWrapInfo$ | async)" class="wrap mt-2 mb-2 p-2">
                 <div class="title">
                     {{ 'SEND.WRAP.TITLE' | translate }}
-                    <mat-icon svgIcon="zano-info"></mat-icon>
+                    <mat-icon svgIcon="pdc-info"></mat-icon>
                 </div>
                 <div class="text-wrap">
                     {{ 'SEND.WRAP.MAIN_TEXT' | translate }}
@@ -158,15 +158,15 @@
                         <td>{{ 'SEND.WRAP.WILL_RECEIVE' | translate }}</td>
                         <td *ngIf="!form.controls.amount.errors">
                             {{ getReceivedValue() | intToMoney }}
-                            {{ 'SEND.WRAP.wZANO' | translate }}
+                            {{ 'SEND.WRAP.wPDC' | translate }}
                         </td>
                         <td *ngIf="form.controls.amount.errors">-</td>
                     </tr>
                     <tr>
                         <td>{{ 'SEND.WRAP.FEE' | translate }}</td>
                         <td>
-                            {{ wrapInfo?.tx_cost?.zano_needed_for_erc20 | intToMoney : zanoAssetInfo.decimal_point }}
-                            {{ 'SEND.WRAP.ZANO' | translate }}
+                            {{ wrapInfo?.tx_cost?.pdc_needed_for_erc20 | intToMoney : pdcAssetInfo.decimal_point }}
+                            {{ 'SEND.WRAP.PDC' | translate }}
                             ({{ '$' + wrapInfo.tx_cost?.usd_needed_for_erc20 }})
                         </td>
                     </tr>
@@ -221,7 +221,7 @@
                         'rotate-180': isVisibleAdditionalOptionsState
                     }"
                     class="ml-1"
-                    svgIcon="zano-dropdown-arrow-down"
+                    svgIcon="pdc-dropdown-arrow-down"
                 ></mat-icon>
             </button>
 

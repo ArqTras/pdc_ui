@@ -7,7 +7,7 @@ import { Wallet } from '@api/models/wallet.model';
 import { hasOwnProperty } from '@parts/functions/has-own-property';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { regExpPassword, ZanoValidators } from '@parts/utils/zano-validators';
+import { regExpPassword, PdcValidators } from '@parts/utils/pdc-validators';
 import { WalletsService } from '@parts/services/wallets.service';
 
 @Component({
@@ -22,11 +22,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     fb = inject(FormBuilder);
 
-    get zanoLogo(): string {
+    get pdcLogo(): string {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/zano-logo.svg' : 'assets/icons/blue/light-zano-logo.svg';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.svg';
     }
 
     regForm = this.fb.group(
@@ -35,7 +35,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             confirmation: this.fb.nonNullable.control(''),
         },
         {
-            validators: [ZanoValidators.formMatch('password', 'confirmation')],
+            validators: [PdcValidators.formMatch('password', 'confirmation')],
         }
     );
 
@@ -104,7 +104,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     resetJwtWalletRpc(): void {
-        this.backend.setupJwtWalletRpc({ secret: '', zanoCompation: false });
+        this.backend.setupJwtWalletRpc({ secret: '', pdcCompation: false });
     }
 
     dropSecureAppData(): void {
@@ -202,8 +202,8 @@ export class LoginComponent implements OnInit, OnDestroy {
                     }
                 }
 
-                if (this.variablesService.settings.zanoCompanionForm.zanoCompation) {
-                    this.backend.setupJwtWalletRpc(this.variablesService.settings.zanoCompanionForm);
+                if (this.variablesService.settings.pdcCompanionForm.pdcCompation) {
+                    this.backend.setupJwtWalletRpc(this.variablesService.settings.pdcCompanionForm);
                 }
             }
 

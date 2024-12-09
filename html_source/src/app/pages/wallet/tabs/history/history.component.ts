@@ -7,7 +7,7 @@ import { BackendService } from '@api/services/backend.service';
 import { Subject } from 'rxjs';
 import { hasOwnProperty } from '@parts/functions/has-own-property';
 import { collapseOnLeaveAnimation, expandOnEnterAnimation } from 'angular-animations';
-import { ZanoAssetInfo, zanoAssetInfo } from '@parts/data/assets';
+import { PdcAssetInfo, pdcAssetInfo } from '@parts/data/assets';
 import { filter, takeUntil } from 'rxjs/operators';
 
 @Component({
@@ -17,7 +17,7 @@ import { filter, takeUntil } from 'rxjs/operators';
     animations: [expandOnEnterAnimation(), collapseOnLeaveAnimation()],
 })
 export class HistoryComponent implements OnInit, OnDestroy {
-    public zanoAssetInfo: ZanoAssetInfo = zanoAssetInfo;
+    public pdcAssetInfo: PdcAssetInfo = pdcAssetInfo;
 
     public opened_transaction_details: string | undefined;
 

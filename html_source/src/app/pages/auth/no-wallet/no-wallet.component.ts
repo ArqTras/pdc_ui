@@ -11,11 +11,11 @@ import { TranslateService } from '@ngx-translate/core';
     styleUrls: ['./no-wallet.component.scss'],
 })
 export class NoWalletComponent {
-    get zanoLogo(): string {
+    get pdcLogo(): string {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/zano-logo.svg' : 'assets/icons/blue/light-zano-logo.svg';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.svg';
     }
 
     constructor(

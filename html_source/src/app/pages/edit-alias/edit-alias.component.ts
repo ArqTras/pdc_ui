@@ -135,7 +135,7 @@ export class EditAliasComponent implements OnInit {
             comment: alias.comment,
         };
         this.oldAliasComment = alias.comment;
-        const balance = new BigNumber(this.wallet.getBalanceByTicker('ZANO')?.unlocked || 0);
+        const balance = new BigNumber(this.wallet.getBalanceByTicker('PDC')?.unlocked || 0);
         this.notEnoughMoney = balance.isLessThan(this.variablesService.default_fee_big);
     }
 

@@ -60,7 +60,7 @@
         "INCOME_TRANSFER_CONFIRMED": "Payment received",
         "INCOME_TRANSFER_UNCONFIRMED": "Incoming payment (not confirmed)",
         "IS_CONFIRMED": "",
-        "IS_MINIMIZE": "Zano application is minimized to the system tray",
+        "IS_MINIMIZE": "Pdc application is minimized to the system tray",
         "IS_RECEIVED": "",
         "LOCKED": "Blocked",
         "MINED": "Mined",
@@ -383,7 +383,7 @@
         "MIN_LENGTH": "Min length {{ requiredLength }}",
         "NOT_ENOUGH_MONEY": "Insufficient funds in account",
         "NOT_ENOUGH_OUTPUTS_TO_MIX": "Mix-in number is too big for current blockchain state. There are not enough unspent outputs to mix with",
-        "NOT_FILE_ZANO_WALLET": "This file is not recognized as a Zano wallet..",
+        "NOT_FILE_PDC_WALLET": "This file is not recognized as a Pdc wallet..",
         "NO_MONEY": "Not enough funds for this transaction",
         "NO_MONEY_REMOVE_OFFER": "There is no fee for deleting an offer, but in order to protect the network against flood transactions you need to have at least {{fee}} {{currency}} in your wallet",
         "REGEXP_INVALID_PASSWORD": "Invalid password. Use only letters (A–Z, a–z), numbers (0–9), and special characters !@#$%^&*()_+-={}[]|:;\"'<>,.?/~. Maximum length: 40 characters.",
@@ -391,7 +391,7 @@
         "TO_BIG_TOTAL_SUPPLY": "To big total supply, reduce it or make decimal point smaller",
         "TRANSACTION_ERROR": "Error. Transaction not completed.",
         "TRANSACTION_IS_TO_BIG": "Transaction exceeds network limit, send required amount with multiple transactions",
-        "TRANSFER_ATTEMPT": "There is no connection to Zano network",
+        "TRANSFER_ATTEMPT": "There is no connection to Pdc network",
         "TX_TYPE_COIN_BASE": "Error. The payment was not completed.",
         "TX_TYPE_NEW_ALIAS": "Error. Failed to register alias to safe",
         "TX_TYPE_NEW_ALIAS_END": "Please try again.",
@@ -476,7 +476,7 @@
         "BUTTON_RESTORE_BACKUP": "Restore from backup",
         "CHOOSE_PATH": "Please choose a path",
         "HELP": "How to create wallet?",
-        "TITLE": "Create or open the wallet to start using Zano"
+        "TITLE": "Create or open the wallet to start using Pdc"
     },
     "MESSAGES": {
         "ADDRESS": "Address",
@@ -487,7 +487,7 @@
     "MIGRATE_WALLET_TO_ZARCANUM": {
         "BUTTON1": "Migrate",
         "LINK1": "What does it mean?",
-        "TEXT1": "There are {{ total_bare_outs }} outputs with total amount of {{ total_amount }} ZANO.",
+        "TEXT1": "There are {{ total_bare_outs }} outputs with total amount of {{ total_amount }} PDC.",
         "TEXT2": "They can be converted in {{ txs_count }} transactions with total fee = {{ expected_total_fee }}.",
         "TITLE": "Migrate wallet to Zarcanum"
     },
@@ -671,7 +671,7 @@
             "FEE_MINIMUM": "The minimum fee required is {{fee}}",
             "FEE_REQUIRED": "Please enter the fee amount.",
             "GREAT_THAN_UNWRAPPED_COINS": "Amount is bigger than ERC20 tokens left available",
-            "LESS_THAN_ZANO_NEEDED": "Too small amount to cover ERC20 fee",
+            "LESS_THAN_PDC_NEEDED": "Too small amount to cover ERC20 fee",
             "MAX_LENGTH": "Maximum comment length reached",
             "MUST_BE_GREATER_THAN_ZERO": "Must be greater than zero",
             "WRAP_INFO_NULL": "failed to request wrap state"
@@ -683,11 +683,11 @@
         "WRAP": {
             "ESTIMATE": "Transaction Estimates",
             "FEE": "Ethereum Txn Fee:",
-            "MAIN_TEXT": "This transaction will create wZano (\"Wrapped Zano\") which will be sent to the specified address on the Ethereum network.",
+            "MAIN_TEXT": "This transaction will create wPdc (\"Wrapped Pdc\") which will be sent to the specified address on the Ethereum network.",
             "TITLE": "Wrap",
             "WILL_RECEIVE": "You'll receive:",
-            "ZANO": "ZANO",
-            "wZANO": "wZANO"
+            "PDC": "PDC",
+            "wPDC": "wPDC"
         }
     },
     "SEND_DETAILS_MODAL": {
@@ -705,9 +705,9 @@
         "APP_LOG_TITLE": "Log level:",
         "DARK_THEME": "Dark theme",
         "FORM": {
-            "ZANO_COMPANION": {
+            "PDC_COMPANION": {
                 "LABELS": {
-                    "LABEL1": "Zano Companion",
+                    "LABEL1": "Pdc Companion",
                     "LABEL2": "Secret",
                     "LABEL3": "Port",
                     "LABEL4": "(Requires master password)"

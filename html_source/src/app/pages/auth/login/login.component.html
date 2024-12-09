@@ -1,7 +1,7 @@
 <div class="auth" fxFlexFill fxLayout="row" fxLayoutAlign="center center">
     <div class="auth-card">
         <div class="logo mb-3" fxLayout="row" fxLayoutAlign="center center">
-            <img [src]="zanoLogo" alt="zano-logo" />
+            <img [src]="pdcLogo" alt="pdc-logo" />
         </div>
 
         <form (ngSubmit)="onSubmitCreatePass()" *ngIf="type === 'reg'" [formGroup]="regForm" class="form">
@@ -112,5 +112,5 @@
 </div>
 
 <ng-template #loaderTemp>
-    <zano-loader></zano-loader>
+    <pdc-loader></pdc-loader>
 </ng-template>

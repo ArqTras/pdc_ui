@@ -7,13 +7,13 @@ import { MIXIN } from '@parts/data/constants';
 import { catchError, debounceTime, distinctUntilChanged, map, retry, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, merge, Observable, of, Subject } from 'rxjs';
 import { AssetBalance, PriceInfo } from '@api/models/assets.model';
-import { regExpAliasName } from '@parts/utils/zano-validators';
-import { insuficcientFunds } from '@parts/utils/zano-errors';
+import { regExpAliasName } from '@parts/utils/pdc-validators';
+import { insuficcientFunds } from '@parts/utils/pdc-errors';
 import { DeeplinkParams } from '@api/models/wallet.model';
 import { WrapInfo } from '@api/models/wrap-info';
-import { ApiZanoService } from '@api/services/api-zano.service';
+import { ApiPdcService } from '@api/services/api-pdc.service';
 import { SendMoneyFormParams } from '@api/models/send-money.model';
-import { ZanoAssetInfo, zanoAssetInfo } from '@parts/data/assets';
+import { PdcAssetInfo, pdcAssetInfo } from '@parts/data/assets';
 import { moneyToInt } from '@parts/functions/money-to-int';
 import { intToMoney } from '@parts/functions/int-to-money';
 import { TranslateService } from '@ngx-translate/core';
@@ -31,7 +31,7 @@ interface AmountInputParams {
 type AssetItems = (AssetBalance & { disabled: boolean })[];
 
 const defaultSendMoneyParams: SendMoneyFormParams = {
-    asset_id: zanoAssetInfo.asset_id,
+    asset_id: pdcAssetInfo.asset_id,
     wallet_id: undefined,
     address: '',
     amount: undefined,
@@ -73,7 +73,7 @@ export class SendComponent implements OnDestroy {
 
     variablesService: VariablesService = inject(VariablesService);
 
-    wrapInfoService: ApiZanoService = inject(ApiZanoService);
+    wrapInfoService: ApiPdcService = inject(ApiPdcService);
 
     assetItems$: Observable<AssetItems> = combineLatest([this.variablesService.currentWallet.balances$, this.isVisibleWrapInfoState$]).pipe(
         map(([balances, disabled]) => {
@@ -84,7 +84,7 @@ export class SendComponent implements OnDestroy {
                     asset_info: { asset_id },
                 } = balance;
 
-                if (asset_id === zanoAssetInfo.asset_id) {
+                if (asset_id === pdcAssetInfo.asset_id) {
                     return items.push({ ...balance, disabled: false });
                 }
 
@@ -128,7 +128,7 @@ export class SendComponent implements OnDestroy {
         amount: undefined,
     };
 
-    public readonly zanoAssetInfo: ZanoAssetInfo = zanoAssetInfo;
+    public readonly pdcAssetInfo: PdcAssetInfo = pdcAssetInfo;
 
     public priceInfo: PriceInfo = { success: false, data: 'Asset not found' };
 
@@ -205,8 +205,8 @@ export class SendComponent implements OnDestroy {
                 message = 'SEND.FORM_ERRORS.GREAT_THAN_UNWRAPPED_COINS';
                 break;
             }
-            case amount.hasError('less_than_zano_needed'): {
-                message = 'SEND.FORM_ERRORS.LESS_THAN_ZANO_NEEDED';
+            case amount.hasError('less_than_pdc_needed'): {
+                message = 'SEND.FORM_ERRORS.LESS_THAN_PDC_NEEDED';
                 break;
             }
             case amount.hasError('wrap_info_null'): {
@@ -252,7 +252,7 @@ export class SendComponent implements OnDestroy {
             }
             case fee.hasError('greater_than_max_amount'): {
                 const { maximum_value } = this.variablesService;
-                const { decimal_point } = zanoAssetInfo;
+                const { decimal_point } = pdcAssetInfo;
                 const max = intToMoney(maximum_value, decimal_point);
                 message = this._translateService.instant('ERRORS.MAX', { max });
                 break;
@@ -389,9 +389,9 @@ export class SendComponent implements OnDestroy {
         const preparedAmount: BigNumber = moneyToInt(isAmountUSD ? convertedAmountUSD() : amount || '0');
 
         const {
-            tx_cost: { zano_needed_for_erc20 },
+            tx_cost: { pdc_needed_for_erc20 },
         } = this.wrapInfo;
-        const needed: BigNumber = new BigNumber(zano_needed_for_erc20);
+        const needed: BigNumber = new BigNumber(pdc_needed_for_erc20);
 
         if (preparedAmount && needed) {
             return preparedAmount.minus(needed);
@@ -490,7 +490,7 @@ export class SendComponent implements OnDestroy {
                                         this._ngZone.run(() => {
                                             this.isVisibleWrapInfoState$.next(data.error_code === 'WRAP');
                                             if (data.error_code === 'WRAP') {
-                                                this.form.controls.asset_id.patchValue(zanoAssetInfo.asset_id);
+                                                this.form.controls.asset_id.patchValue(pdcAssetInfo.asset_id);
                                             }
 
                                             if (valid_status === false && !this.isVisibleWrapInfoState$.value) {
@@ -567,7 +567,7 @@ export class SendComponent implements OnDestroy {
                     validators: [
                         Validators.required,
                         (control: AbstractControl): ValidationErrors | null => {
-                            const max: BigNumber = new BigNumber(intToMoney(maximum_value, zanoAssetInfo.decimal_point));
+                            const max: BigNumber = new BigNumber(intToMoney(maximum_value, pdcAssetInfo.decimal_point));
                             const amount: BigNumber = new BigNumber(control.value);
                             return amount.isGreaterThan(max) ? { greater_than_max_amount: { max: max.toString() } } : null;
                         },
@@ -615,8 +615,8 @@ export class SendComponent implements OnDestroy {
                                 error = { great_than_unwraped_coins: true };
                             }
 
-                            if (amount.isLessThan(intToMoney(new BigNumber(this.wrapInfo.tx_cost.zano_needed_for_erc20)))) {
-                                error = { less_than_zano_needed: true };
+                            if (amount.isLessThan(intToMoney(new BigNumber(this.wrapInfo.tx_cost.pdc_needed_for_erc20)))) {
+                                error = { less_than_pdc_needed: true };
                             }
 
                             if (error) {
@@ -727,13 +727,13 @@ export class SendComponent implements OnDestroy {
                         success: false,
                         data: 'Asset not found',
                     });
-                    const price$ = this._httpClient.get<PriceInfo>(`https://explorer.zano.org/api/price?asset_id=${asset_id}`).pipe(
+                    const price$ = this._httpClient.get<PriceInfo>(`https://explorer.pdc.org/api/price?asset_id=${asset_id}`).pipe(
                         retry(5),
                         catchError((err: Error) => {
                             return default$;
                         })
                     );
-                    return zanoAssetInfo.asset_id === asset_id ? price$ : default$;
+                    return pdcAssetInfo.asset_id === asset_id ? price$ : default$;
                 }),
                 takeUntil(this._destroy$)
             )
@@ -830,7 +830,7 @@ export class SendComponent implements OnDestroy {
                         amount: amount || null,
                         comment: comment || comments || '',
                         mixin: +mixins || MIXIN,
-                        asset_id: zanoAssetInfo.asset_id,
+                        asset_id: pdcAssetInfo.asset_id,
                         fee: fee || this.variablesService.default_fee,
                         push_payer: hide_sender === 'false',
                         hide_receiver: hide_receiver === 'false',

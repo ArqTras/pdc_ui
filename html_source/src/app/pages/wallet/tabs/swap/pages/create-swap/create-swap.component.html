@@ -64,7 +64,7 @@
 
         <div class="wrapper-reverse">
             <button (click)="reverse()" [disabled]="currentWallet.balances.length === 1" class="revers" type="button">
-                <mat-icon class="rotate-90" svgIcon="zano-swap"></mat-icon>
+                <mat-icon class="rotate-90" svgIcon="pdc-swap"></mat-icon>
             </button>
         </div>
 
@@ -167,9 +167,9 @@
                 id="address"
             />
 
-            <mat-autocomplete #auto="matAutocomplete" class="zano-autocomplete-panel">
+            <mat-autocomplete #auto="matAutocomplete" class="pdc-autocomplete-panel">
                 <mat-option *ngIf="vm.loading" class="loading" disabled>
-                    <zano-loader class="mx-auto" style="display: block; width: fit-content"></zano-loader>
+                    <pdc-loader class="mx-auto" style="display: block; width: fit-content"></pdc-loader>
                 </mat-option>
 
                 <mat-option *ngIf="form.controls.receiverAddress.value[0] === '@' && vm.items?.length === 0 && !vm.loading" disabled>
@@ -192,7 +192,7 @@
                         </ng-container>
                         <!-- Address -->
                         <ng-template #itemAddressTemplate>
-                            <span class="pl-1">{{ item | zanoShortString }}</span>
+                            <span class="pl-1">{{ item | pdcShortString }}</span>
                         </ng-template>
                     </mat-option>
                 </ng-container>
@@ -203,7 +203,7 @@
             </div>
 
             <div *ngIf="aliasAddress" class="info text-ellipsis">
-                <span>{{ aliasAddress | zanoShortString }}</span>
+                <span>{{ aliasAddress | pdcShortString }}</span>
             </div>
         </div>
         <!-- /Address -->
@@ -211,7 +211,7 @@
         <div class="actions">
             <button [disabled]="form.invalid || (loading$ | async)" class="btn primary big w-100" type="submit">
                 <ng-container *ngIf="!(loading$ | async)">{{ 'CREATE_SWAP.FORM.BUTTONS.BUTTON1' | translate }} </ng-container>
-                <zano-loader *ngIf="loading$ | async" [type]="'circle'"></zano-loader>
+                <pdc-loader *ngIf="loading$ | async" [type]="'circle'"></pdc-loader>
             </button>
             <a class="btn outline big w-100" routerLink="/wallet/swap">{{ 'CREATE_SWAP.FORM.BUTTONS.BUTTON2' | translate }}</a>
         </div>

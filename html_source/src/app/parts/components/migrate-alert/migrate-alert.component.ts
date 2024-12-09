@@ -15,7 +15,7 @@ import { VariablesService } from '@parts/services/variables.service';
 import { ModalService } from '@parts/services/modal.service';
 
 @Component({
-    selector: 'zano-migrate-alert',
+    selector: 'pdc-migrate-alert',
     standalone: true,
     imports: [CommonModule, FlexModule, MatIconModule, TranslateModule],
     templateUrl: './migrate-alert.component.html',

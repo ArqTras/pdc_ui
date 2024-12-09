@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
     selector: 'app-copy-button',
     template: `
         <button (click)="copy()" [classList]="'btn-icon circle' + ' ' + size">
-            <mat-icon [class]="size" [svgIcon]="copyAnimation ? 'zano-check' : 'zano-copy'"></mat-icon>
+            <mat-icon [class]="size" [svgIcon]="copyAnimation ? 'pdc-check' : 'pdc-copy'"></mat-icon>
         </button>
     `,
     styles: [],

@@ -111,26 +111,26 @@
                                 [value]="this.variablesService.visibilityBalance$ | async"></app-switch>
                 </div>
 
-                <form [formGroup]="zanoCompanionForm">
+                <form [formGroup]="pdcCompanionForm">
                     <div class="form__field">
                         <label>
-                            {{ 'SETTINGS.FORM.ZANO_COMPANION.LABELS.LABEL1' | translate }}
+                            {{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL1' | translate }}
                             <ng-container *ngIf="!variablesService.appPass">
-                                {{ 'SETTINGS.FORM.ZANO_COMPANION.LABELS.LABEL4' | translate }}
+                                {{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL4' | translate }}
                             </ng-container>
                         </label>
-                        <app-switch formControlName="zanoCompation"></app-switch>
+                        <app-switch formControlName="pdcCompation"></app-switch>
                     </div>
-                    <ng-container *ngIf="zanoCompanionForm.controls.zanoCompation.getRawValue()">
+                    <ng-container *ngIf="pdcCompanionForm.controls.pdcCompation.getRawValue()">
                         <div class="form__card">
                             <div class="form__field form__field--secret">
                                 <label
-                                    for="field-secret">{{ 'SETTINGS.FORM.ZANO_COMPANION.LABELS.LABEL2' | translate }}</label>
+                                    for="field-secret">{{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL2' | translate }}</label>
                                 <input
                                     (contextmenu)="
-                                        variablesService.onContextMenuOnlyCopy($event, zanoCompanionForm.controls['secret'].value)
+                                        variablesService.onContextMenuOnlyCopy($event, pdcCompanionForm.controls['secret'].value)
                                     "
-                                    [class.invalid]="zanoCompanionForm.controls['secret'].invalid"
+                                    [class.invalid]="pdcCompanionForm.controls['secret'].invalid"
                                     [readonly]="true"
                                     class="form__field--input"
                                     formControlName="secret"
@@ -139,11 +139,11 @@
                                 />
 
                                 <button (click)="copySecret()" class="btn--copy">
-                                    <mat-icon svgIcon="zano-copy"></mat-icon>
+                                    <mat-icon svgIcon="pdc-copy"></mat-icon>
                                 </button>
 
                                 <button (click)="regenerateSecret()" class="btn--regenerate">
-                                    <mat-icon svgIcon="zano-regenerate"></mat-icon>
+                                    <mat-icon svgIcon="pdc-regenerate"></mat-icon>
                                 </button>
 
                                 <div *ngIf="isSecretWasCopied" class="info success" style="text-align: right">
@@ -153,7 +153,7 @@
 
                             <div class="form__field">
                                 <label
-                                    for="field-port">{{ 'SETTINGS.FORM.ZANO_COMPANION.LABELS.LABEL3' | translate }}</label>
+                                    for="field-port">{{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL3' | translate }}</label>
                                 <input
                                     (contextmenu)="
                                         variablesService.onContextMenuOnlyCopy($event, this.variablesService.rpc_port?.toString())
@@ -288,7 +288,7 @@
                     <p *ngIf="!isBuildVersionWasCopied">
                         Build version: {{ currentBuild }}
                         <button (click)="copyBuildVersion()" class="btn--copy">
-                            <mat-icon svgIcon="zano-copy"></mat-icon>
+                            <mat-icon svgIcon="pdc-copy"></mat-icon>
                         </button>
                     </p>
 

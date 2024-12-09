@@ -7,7 +7,7 @@ import { ConfirmModalComponent, ConfirmModalData } from '@parts/modals/confirm-m
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { WalletsService } from '@parts/services/wallets.service';
-import { ZanoLoadersService } from '@parts/services/zano-loaders.service';
+import { PdcLoadersService } from '@parts/services/pdc-loaders.service';
 import { BackendService } from '@api/services/backend.service';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 
@@ -16,7 +16,7 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
     template: `
         <div class="sidebar-header mb-2">
             <div class="logo">
-                <img [src]="zanoLogo" alt="zano-logo" />
+                <img [src]="pdcLogo" alt="pdc-logo" />
             </div>
         </div>
 
@@ -47,7 +47,7 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
                     fxLayout="row inline wrap"
                     fxLayoutAlign="start center"
                 >
-                    <mat-icon class="mr-1" svgIcon="zano-plus"></mat-icon>
+                    <mat-icon class="mr-1" svgIcon="pdc-plus"></mat-icon>
                     <span>{{ 'SIDEBAR.ADD_NEW' | translate }}</span>
                 </button>
 
@@ -58,7 +58,7 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
                     fxLayoutAlign="start center"
                     routerLinkActive="active"
                 >
-                    <mat-icon class="mr-1" svgIcon="zano-settings"></mat-icon>
+                    <mat-icon class="mr-1" svgIcon="pdc-settings"></mat-icon>
                     <span>{{ 'SIDEBAR.SETTINGS' | translate }}</span>
                 </button>
 
@@ -75,7 +75,7 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
                         tooltip="{{ 'SIDEBAR.LOG_OUT_TOOLTIP' | translate }}"
                         tooltipClass="table-tooltip account-tooltip"
                     >
-                        <mat-icon class="mr-1" svgIcon="zano-logout"></mat-icon>
+                        <mat-icon class="mr-1" svgIcon="pdc-logout"></mat-icon>
                         <span>{{ 'SIDEBAR.LOG_OUT' | translate }}</span>
                     </button>
                 </ng-container>
@@ -83,7 +83,7 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
                 <ng-template #masterPass>
                     <button (click)="logOut()" class="outline small w-100 px-2" fxLayout="row inline wrap"
                             fxLayoutAlign="start center">
-                        <mat-icon class="mr-1" svgIcon="zano-logout"></mat-icon>
+                        <mat-icon class="mr-1" svgIcon="pdc-logout"></mat-icon>
                         <span> {{ 'SIDEBAR.LOG_OUT' | translate }}</span>
                     </button>
                 </ng-template>
@@ -109,14 +109,14 @@ export class SidebarComponent implements OnDestroy {
         private ngZone: NgZone,
         private _matDialog: MatDialog,
         private backend: BackendService,
-        public zanoLoadersService: ZanoLoadersService
+        public pdcLoadersService: PdcLoadersService
     ) {}
 
-    get zanoLogo(): string {
+    get pdcLogo(): string {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/zano-logo.svg' : 'assets/icons/blue/light-zano-logo.svg';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.svg';
     }
 
     ngOnDestroy(): void {
@@ -178,7 +178,7 @@ export class SidebarComponent implements OnDestroy {
     }
 
     logOut(): void {
-        this.zanoLoadersService.open('fullScreen', 'SIDEBAR.SYNCHRONIZATION.LOGGING_OUT');
+        this.pdcLoadersService.open('fullScreen', 'SIDEBAR.SYNCHRONIZATION.LOGGING_OUT');
 
         setTimeout(() => {
             this.variablesService.stopCountdown();
@@ -186,7 +186,7 @@ export class SidebarComponent implements OnDestroy {
             this.variablesService.appPass = '';
             this.ngZone.run(() => {
                 this.router.navigate(['/login'], { queryParams: { type: 'auth' } }).then(() => {
-                    this.zanoLoadersService.close('fullScreen');
+                    this.pdcLoadersService.close('fullScreen');
                 });
             });
         }, 500);

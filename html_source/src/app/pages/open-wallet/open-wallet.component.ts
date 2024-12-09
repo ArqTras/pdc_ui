@@ -8,9 +8,9 @@ import { Wallet } from '@api/models/wallet.model';
 import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ZanoValidators } from '@parts/utils/zano-validators';
+import { PdcValidators } from '@parts/utils/pdc-validators';
 import { WalletsService } from '@parts/services/wallets.service';
-import { notFileZanoWallet, wrongPassword } from '@parts/utils/zano-errors';
+import { notFilePdcWallet, wrongPassword } from '@parts/utils/pdc-errors';
 import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.models';
 
 @Component({
@@ -94,7 +94,7 @@ import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.model
             </div>
         </div>
 
-        <ng-template #loaderTemp><zano-loader></zano-loader></ng-template>
+        <ng-template #loaderTemp><pdc-loader></pdc-loader></ng-template>
     `,
 })
 export class OpenWalletComponent implements OnInit, OnDestroy {
@@ -116,7 +116,7 @@ export class OpenWalletComponent implements OnInit, OnDestroy {
         name: this.fb.control('', [
             Validators.required,
             Validators.maxLength(this.variablesService.maxWalletNameLength),
-            ZanoValidators.duplicate(this.variablesService.walletNamesForComparisons),
+            PdcValidators.duplicate(this.variablesService.walletNamesForComparisons),
         ]),
         password: this.fb.control(''),
         filePath: this.fb.control('', Validators.required),
@@ -199,7 +199,7 @@ export class OpenWalletComponent implements OnInit, OnDestroy {
                     }
 
                     if (errorCode === 'INVALID_FILE') {
-                        errorText = this.translate.instant(notFileZanoWallet.errorText);
+                        errorText = this.translate.instant(notFilePdcWallet.errorText);
                     }
 
                     if (['INVALID_FILE', 'FILE_NOT_FOUND'].includes(errorCode)) {

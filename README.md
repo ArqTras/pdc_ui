@@ -1,2 +1,2 @@
-# zano_ui
-UI development from Zano  project
+# pdc_ui
+UI development from Pdc  project

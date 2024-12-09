@@ -4,7 +4,7 @@ import { NonNullableFormBuilder, ValidationErrors, Validators } from '@angular/f
 import { AssetBalance, AssetInfo } from '@api/models/assets.model';
 import BigNumber from 'bignumber.js';
 import { intToMoney } from '@parts/functions/int-to-money';
-import { insuficcientFunds } from '@parts/utils/zano-errors';
+import { insuficcientFunds } from '@parts/utils/pdc-errors';
 import { BackendService } from '@api/services/backend.service';
 import { moneyToInt } from '@parts/functions/money-to-int';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';

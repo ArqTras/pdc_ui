@@ -32,7 +32,7 @@
                 tooltipClass="table-tooltip account-tooltip"
                 type="button"
             >
-                <mat-icon svgIcon="zano-close"></mat-icon>
+                <mat-icon svgIcon="pdc-close"></mat-icon>
             </button>
         </div>
     </div>
@@ -49,10 +49,10 @@
                 class="price"
             >
                 {{
-                    wallet.getMoneyEquivalentForZano(variablesService.zanoMoneyEquivalent) | intToMoney | currency : 'USD' || '---'
+                    wallet.getMoneyEquivalentForPdc(variablesService.pdcMoneyEquivalent) | intToMoney | currency : 'USD' || '---'
                 }}
-                <span [class.red]="variablesService.zanoMoneyEquivalentPercent < 0" class="percent">
-                    {{ variablesService.zanoMoneyEquivalentPercent | number : '1.2-2' }}%
+                <span [class.red]="variablesService.pdcMoneyEquivalentPercent < 0" class="percent">
+                    {{ variablesService.pdcMoneyEquivalentPercent | number : '1.2-2' }}%
                 </span>
             </span>
         </ng-container>

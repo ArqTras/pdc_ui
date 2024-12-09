@@ -4,7 +4,7 @@ import { NonNullableFormBuilder, ValidationErrors, Validators } from '@angular/f
 import { AssetInfo } from '@api/models/assets.model';
 import { BackendService } from '@api/services/backend.service';
 import { UpdateAssetParams } from '@api/models/custom-asstest.model';
-import { regExpHex } from '@parts/utils/zano-validators';
+import { regExpHex } from '@parts/utils/pdc-validators';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({

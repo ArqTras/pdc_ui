@@ -5,7 +5,7 @@ import { AssetBalance, AssetBalances, AssetInfo, AssetsInfoWhitelist, VerifiedAs
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { Alias } from '@api/models/alias.model';
 import { SendMoneyFormParams } from '@api/models/send-money.model';
-import { defaultAssetLogoSrc, zanoAssetInfo } from '@parts/data/assets';
+import { defaultAssetLogoSrc, pdcAssetInfo } from '@parts/data/assets';
 import { map } from 'rxjs/operators';
 
 export const defaultAssetsInfoWhitelist = { global_whitelist: [], local_whitelist: [], own_assets: [] };
@@ -16,10 +16,10 @@ const sortBalances = (value: AssetBalances | null | undefined): AssetBalances =>
     const sortedBalances: AssetBalances = [];
     if (value) {
         const assets = [...value];
-        const indexZano = assets.findIndex(({ asset_info: { ticker } }) => ticker === 'ZANO');
-        if (indexZano >= 0) {
-            const assetZano = assets.splice(indexZano, 1)[0];
-            sortedBalances.push(assetZano);
+        const indexPdc = assets.findIndex(({ asset_info: { ticker } }) => ticker === 'PDC');
+        if (indexPdc >= 0) {
+            const assetPdc = assets.splice(indexPdc, 1)[0];
+            sortedBalances.push(assetPdc);
         }
         const sortedAssetsByBalance = assets.sort((a, b) => new BigNumber(b.total).minus(new BigNumber(a.total)).toNumber());
         sortedBalances.push(...sortedAssetsByBalance);
@@ -36,8 +36,8 @@ const prepareBalances = (
 
     const ensureLogoAndPriceUrl = (asset_info: AssetInfo): AssetInfo => ({
         ...asset_info,
-        logo: asset_info.logo || (asset_info.asset_id === zanoAssetInfo.asset_id ? zanoAssetInfo.logo : defaultAssetLogoSrc),
-        price_url: asset_info.price_url || (asset_info.asset_id === zanoAssetInfo.asset_id ? zanoAssetInfo.price_url : ''),
+        logo: asset_info.logo || (asset_info.asset_id === pdcAssetInfo.asset_id ? pdcAssetInfo.logo : defaultAssetLogoSrc),
+        price_url: asset_info.price_url || (asset_info.asset_id === pdcAssetInfo.asset_id ? pdcAssetInfo.price_url : ''),
     });
 
     for (const asset_info of verifiedAssetInfoWhitelist) {
@@ -97,7 +97,7 @@ export class Wallet {
     }
 
     get allAssetsInfo(): AssetInfo[] {
-        return [zanoAssetInfo, ...this.allAssetsInfoWhitelist];
+        return [pdcAssetInfo, ...this.allAssetsInfoWhitelist];
     }
 
     originalBalances$: BehaviorSubject<AssetBalances> = new BehaviorSubject<AssetBalances>([]);
@@ -208,9 +208,9 @@ export class Wallet {
         return this.balances.find(({ asset_info: { ticker } }) => ticker === searchTicker);
     }
 
-    getMoneyEquivalentForZano(equivalent): string {
-        const balanceZano = this.getBalanceByTicker('ZANO')?.total || 0;
-        return new BigNumber(balanceZano).multipliedBy(equivalent).toFixed(0);
+    getMoneyEquivalentForPdc(equivalent): string {
+        const balancePdc = this.getBalanceByTicker('PDC')?.total || 0;
+        return new BigNumber(balancePdc).multipliedBy(equivalent).toFixed(0);
     }
 
     prepareHistory(items: Transaction[]): void {

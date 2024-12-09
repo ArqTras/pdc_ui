@@ -1,11 +1,11 @@
 {
-    "name": "zano",
+    "name": "pdc",
     "version": "0.0.0",
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
         "build": "ng build",
-        "build --watch": "ng build --output-path \"/Applications/Zano.app/Contents/MacOS/html\" --watch",
+        "build --watch": "ng build --output-path \"/Applications/Pdc.app/Contents/MacOS/html\" --watch",
         "build --html": "node update-build-time.js && ng build --output-path \"../html/\"",
         "test": "ng test",
         "lint": "ng lint",

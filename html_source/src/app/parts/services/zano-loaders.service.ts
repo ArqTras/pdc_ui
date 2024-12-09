@@ -16,7 +16,7 @@ type TDataLoaders = {
 @Injectable({
     providedIn: 'root',
 })
-export class ZanoLoadersService {
+export class PdcLoadersService {
     private _loaders$ = new BehaviorSubject<TDataLoaders>({
         fullScreen: { state: false, message: 'Loading' },
     });

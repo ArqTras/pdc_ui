@@ -3,7 +3,7 @@
         <div class="wallet-wrapper" fxLayout="column" fxLayoutAlign="start start">
             <div class="title" fxLayout="row nowrap" fxLayoutAlign="start center" fxLayoutGap="1rem">
                 <h1 class="text-ellipsis">
-                    {{ variablesService.currentWallet.address | zanoShortString }}
+                    {{ variablesService.currentWallet.address | pdcShortString }}
                 </h1>
 
                 <app-copy-button
@@ -16,20 +16,20 @@
                 >
                 </app-copy-button>
 
-                <zano-alias-controls></zano-alias-controls>
+                <pdc-alias-controls></pdc-alias-controls>
             </div>
         </div>
 
         <ng-container *ngIf="isShowMigrateAlert">
             <hr fxFlex="0 0 1px" style="height: 3.6rem; border: none; border-right: var(--table-rounded-corners-border)" />
-            <zano-migrate-alert></zano-migrate-alert>
+            <pdc-migrate-alert></pdc-migrate-alert>
         </ng-container>
     </div>
 
     <div class="right" fxFlex fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="1rem">
-        <zano-shield-testnet *ngIf="variablesService.testnet"></zano-shield-testnet>
+        <pdc-shield-testnet *ngIf="variablesService.testnet"></pdc-shield-testnet>
 
-        <zano-visibility-balance-button></zano-visibility-balance-button>
+        <pdc-visibility-balance-button></pdc-visibility-balance-button>
 
         <div class="dropdown">
             <button
@@ -40,7 +40,7 @@
                 class="btn-icon circle big"
                 data-target="wallet-dropdown-button"
             >
-                <mat-icon svgIcon="zano-wallet-settings"></mat-icon>
+                <mat-icon svgIcon="pdc-wallet-settings"></mat-icon>
             </button>
         </div>
     </div>
@@ -78,7 +78,7 @@
                     tooltipClass="table-tooltip account-tooltip"
                     type="button"
                 >
-                    <mat-icon svgIcon="zano-settings" class="mr-1"></mat-icon>
+                    <mat-icon svgIcon="pdc-settings" class="mr-1"></mat-icon>
                     <span>{{ 'WALLET_DETAILS.WALLET_OPTIONS' | translate }}</span>
                 </button>
             </li>
@@ -95,7 +95,7 @@
                         tooltipClass="table-tooltip account-tooltip"
                         type="button"
                     >
-                        <mat-icon svgIcon="zano-plus" class="mr-1"></mat-icon>
+                        <mat-icon svgIcon="pdc-plus" class="mr-1"></mat-icon>
                         <span>{{ 'WALLET_DETAILS.WHITELIST_ASSET' | translate }}</span>
                     </button>
                 </li>
@@ -112,7 +112,7 @@
                     tooltipClass="table-tooltip account-tooltip"
                     type="button"
                 >
-                    <mat-icon svgIcon="zano-export" class="mr-1"></mat-icon>
+                    <mat-icon svgIcon="pdc-export" class="mr-1"></mat-icon>
                     <span>{{ 'EXPORT_HISTORY.EXPORT_BUTTON' | translate }}</span>
                 </button>
             </li>
@@ -129,7 +129,7 @@
                         tooltipClass="table-tooltip account-tooltip"
                         type="button"
                     >
-                        <mat-icon svgIcon="zano-update" class="mr-1"></mat-icon>
+                        <mat-icon svgIcon="pdc-update" class="mr-1"></mat-icon>
                         <span>{{ 'WALLET_DETAILS.RESYNC_WALLET_BUTTON' | translate }}</span>
                     </button>
                 </li>
@@ -145,7 +145,7 @@
                     tooltipClass="table-tooltip account-tooltip"
                     type="button"
                 >
-                    <mat-icon svgIcon="zano-close-v2" class="mr-1"></mat-icon>
+                    <mat-icon svgIcon="pdc-close-v2" class="mr-1"></mat-icon>
                     <span>{{ 'WALLET_DETAILS.BUTTON_REMOVE' | translate }}</span>
                 </button>
             </li>

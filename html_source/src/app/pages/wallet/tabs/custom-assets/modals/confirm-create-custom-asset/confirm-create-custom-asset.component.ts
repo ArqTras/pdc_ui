@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { VariablesService } from '@parts/services/variables.service';
 import { NonNullableFormBuilder } from '@angular/forms';
-import { ZanoValidators } from '@parts/utils/zano-validators';
+import { PdcValidators } from '@parts/utils/pdc-validators';
 import { DeployAssetParams } from '@api/models/custom-asstest.model';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
@@ -22,6 +22,6 @@ export class ConfirmCreateCustomAssetComponent {
             password: this.fb.control(''),
             appPass: this.fb.control(this.variablesService.appPass || ''),
         },
-        { validators: [ZanoValidators.formMatch('password', 'appPass', 'passwordNotMatch')] }
+        { validators: [PdcValidators.formMatch('password', 'appPass', 'passwordNotMatch')] }
     );
 }

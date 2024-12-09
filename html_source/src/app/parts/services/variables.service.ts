@@ -20,7 +20,7 @@ export class VariablesService implements OnDestroy {
 
     visibilityBalance$ = new BehaviorSubject<boolean>(true);
 
-    zano_current_supply = undefined;
+    pdc_current_supply = undefined;
 
     rpc_port!: number;
 
@@ -48,11 +48,11 @@ export class VariablesService implements OnDestroy {
 
     appLogin: boolean = false;
 
-    zanoMoneyEquivalent: number = 0;
+    pdcMoneyEquivalent: number = 0;
 
-    zanoMoneyEquivalentPercent: number = 0;
+    pdcMoneyEquivalentPercent: number = 0;
 
-    defaultTicker: 'ZANO' = 'ZANO';
+    defaultTicker: 'PDC' = 'PDC';
 
     opening_wallet: Wallet;
 
@@ -113,8 +113,8 @@ export class VariablesService implements OnDestroy {
         default_path: '/',
         viewedContracts: [],
         notViewedContracts: [],
-        zanoCompanionForm: {
-            zanoCompation: false,
+        pdcCompanionForm: {
+            pdcCompation: false,
             secret: '',
         },
         wallets: [],

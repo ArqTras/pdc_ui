@@ -1,12 +1,12 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { notFileZanoWallet, ZanoValidationErrors } from '@parts/utils/zano-errors';
+import { notFilePdcWallet, PdcValidationErrors } from '@parts/utils/pdc-errors';
 import { MIMETypes } from '@parts/utils/MIME-types';
 
 export const regExpHex = /^[a-f0-9]{64}$/i;
 export const regExpAliasName = /^@?[a-z\d.-]{2,25}$/;
 export const regExpPassword = /^[A-Za-z0-9!@#$%^&*()_+\-={}\[\]|:;"'<>,.?/~`]{1,40}$/;
 
-export class ZanoValidators {
+export class PdcValidators {
     static hash({ value }: AbstractControl): ValidationErrors | null {
         return regExpHex.test(value) ? null : { invalidHash: true };
     }
@@ -34,7 +34,7 @@ export class ZanoValidators {
     }
 }
 
-export const filePathWalletValidator = (path: string): ZanoValidationErrors | null => {
+export const filePathWalletValidator = (path: string): PdcValidationErrors | null => {
     if (!(path && path.trim().length)) {
         return null;
     }
@@ -50,7 +50,7 @@ export const filePathWalletValidator = (path: string): ZanoValidationErrors | nu
         let index = 0;
         while (index < MIMETypes.length) {
             if (fileName.includes(MIMETypes[index])) {
-                return notFileZanoWallet;
+                return notFilePdcWallet;
             }
             index++;
         }

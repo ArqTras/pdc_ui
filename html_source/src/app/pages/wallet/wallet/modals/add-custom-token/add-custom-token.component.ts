@@ -1,11 +1,11 @@
 import { Component, inject, NgZone } from '@angular/core';
 import { FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { VariablesService } from '@parts/services/variables.service';
-import { ZanoValidators } from '@parts/utils/zano-validators';
+import { PdcValidators } from '@parts/utils/pdc-validators';
 import { BackendService } from '@api/services/backend.service';
 import { AssetBalance, ParamsAddCustomAssetId } from '@api/models/assets.model';
 import { WalletsService } from '@parts/services/wallets.service';
-import { wrongAssetId } from '@parts/utils/zano-errors';
+import { wrongAssetId } from '@parts/utils/pdc-errors';
 import { CommonModule } from '@angular/common';
 import { FlexModule } from '@angular/flex-layout';
 import { TranslateModule } from '@ngx-translate/core';
@@ -25,7 +25,7 @@ export class AddCustomTokenComponent {
     private fb: NonNullableFormBuilder = inject(NonNullableFormBuilder);
 
     formGroup = this.fb.group<{ asset_id: FormControl<string> }>({
-        asset_id: this.fb.control('', Validators.compose([Validators.required, ZanoValidators.hash, Validators.maxLength(64)])),
+        asset_id: this.fb.control('', Validators.compose([Validators.required, PdcValidators.hash, Validators.maxLength(64)])),
     });
 
     public variablesService: VariablesService = inject(VariablesService);

@@ -6,7 +6,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { hasOwnProperty } from '@parts/functions/has-own-property';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { regExpPassword, ZanoValidators } from '@parts/utils/zano-validators';
+import { regExpPassword, PdcValidators } from '@parts/utils/pdc-validators';
 import { WalletsService } from '@parts/services/wallets.service';
 import { Wallet } from '@api/models/wallet.model';
 import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.models';
@@ -116,12 +116,12 @@ import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.model
                                 </div>
 
                                 <button [disabled]="!seedPhraseForm.valid" class="primary w-100 big mb-2" type="submit">
-                                    <mat-icon svgIcon="zano-check-shield" class="mr-1"></mat-icon>
+                                    <mat-icon svgIcon="pdc-check-shield" class="mr-1"></mat-icon>
                                     {{ 'WALLET_DETAILS.FORM.GENERATE_SECURE_SEED' | translate }}
                                 </button>
 
                                 <p class="text-align-center color-primary">
-                                    <mat-icon svgIcon="zano-info" class="mr-1"></mat-icon>
+                                    <mat-icon svgIcon="pdc-info" class="mr-1"></mat-icon>
                                     {{ 'WALLET_DETAILS.FORM.SECURED_SEED_WILL_REQUIRE' | translate }}
                                 </p>
                             </form>
@@ -141,7 +141,7 @@ import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.model
                                             fxLayoutAlign="start center"
                                         >
                                             {{ 'WALLET_DETAILS.SEED_IS_UNSECURED' | translate }}
-                                            <mat-icon svgIcon="zano-unsecured" class="ml-1"></mat-icon>
+                                            <mat-icon svgIcon="pdc-unsecured" class="ml-1"></mat-icon>
                                         </span>
                                         <span
                                             *ngIf="seedPhraseForm.controls.password.value.length > 0"
@@ -150,7 +150,7 @@ import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.model
                                             fxLayoutAlign="start center"
                                         >
                                             {{ 'WALLET_DETAILS.SEED_IS_SECURED' | translate }}
-                                            <mat-icon svgIcon="zano-secured" class="ml-1"></mat-icon>
+                                            <mat-icon svgIcon="pdc-secured" class="ml-1"></mat-icon>
                                         </span>
                                     </div>
                                 </div>
@@ -176,17 +176,17 @@ import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.model
                                     <div *ngIf="showSeed" class="wrap-buttons w-100 mb-2" fxLayout="row nowrap">
                                         <button (click)="copySeedPhrase()" class="outline big w-100" type="button">
                                             <ng-container *ngIf="!seedPhraseCopied">
-                                                <mat-icon svgIcon="zano-copy" class="mr-1"></mat-icon>
+                                                <mat-icon svgIcon="pdc-copy" class="mr-1"></mat-icon>
                                                 {{ 'SEED_PHRASE.BUTTON_COPY' | translate }}
                                             </ng-container>
                                             <ng-container *ngIf="seedPhraseCopied">
-                                                <mat-icon svgIcon="zano-check" class="mr-1"></mat-icon>
+                                                <mat-icon svgIcon="pdc-check" class="mr-1"></mat-icon>
                                                 {{ 'SEED_PHRASE.BUTTON_COPIED' | translate }}
                                             </ng-container>
                                         </button>
                                     </div>
                                     <p *ngIf="seedPhraseForm.controls.password.value.length > 0" class="text-align-center">
-                                        <mat-icon svgIcon="zano-info" class="mr-1"></mat-icon>
+                                        <mat-icon svgIcon="pdc-info" class="mr-1"></mat-icon>
                                         <span class="color-primary">{{ 'WALLET_DETAILS.REMEMBER_YOU_WILL_REQUIRE' | translate }}</span>
                                     </p>
                                 </div>
@@ -233,7 +233,7 @@ export class SeedPhraseComponent implements OnInit, OnDestroy {
     fb = inject(FormBuilder);
 
     detailsForm = this.fb.group({
-        name: this.fb.nonNullable.control('', [ZanoValidators.duplicate(this.variablesService.walletNamesForComparisons)]),
+        name: this.fb.nonNullable.control('', [PdcValidators.duplicate(this.variablesService.walletNamesForComparisons)]),
         path: this.fb.nonNullable.control(''),
     });
 
@@ -243,7 +243,7 @@ export class SeedPhraseComponent implements OnInit, OnDestroy {
             confirmPassword: this.fb.nonNullable.control(''),
         },
         {
-            validators: [ZanoValidators.formMatch('password', 'confirmPassword')],
+            validators: [PdcValidators.formMatch('password', 'confirmPassword')],
         }
     );
 

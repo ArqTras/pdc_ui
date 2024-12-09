@@ -14,7 +14,7 @@ import {
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SendMoneyFormParams } from '@api/models/send-money.model';
 import { VariablesService } from '@parts/services/variables.service';
-import { ZanoValidators } from '@parts/utils/zano-validators';
+import { PdcValidators } from '@parts/utils/pdc-validators';
 import { BigNumber } from 'bignumber.js';
 import { AssetBalance, PriceInfo } from '@api/models/assets.model';
 
@@ -79,7 +79,7 @@ export class SendModalComponent implements OnInit, OnDestroy {
             this.confirmForm.controls.appPass.patchValue(appPass, {
                 emitEvent: false,
             });
-            this.confirmForm.setValidators([ZanoValidators.formMatch('password', 'appPass', 'passwordNotMatch')]);
+            this.confirmForm.setValidators([PdcValidators.formMatch('password', 'appPass', 'passwordNotMatch')]);
             this.confirmForm.controls.password.setValidators([Validators.required]);
             this.confirmForm.updateValueAndValidity();
         }

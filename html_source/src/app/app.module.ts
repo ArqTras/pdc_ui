@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { RegisterContextTemplatesComponent } from '@parts/components/register-context-templates.component';
 import { DEFAULT_DIALOG_CONFIG, DialogConfig } from '@angular/cdk/dialog';
 import { MatIconRegistry } from '@angular/material/icon';
-import { materialZanoIcons } from '../assets/material-zano-icons';
+import { materialPdcIcons } from '../assets/material-pdc-icons';
 import { MAT_DIALOG_DEFAULT_OPTIONS, MatDialogConfig, MatDialogModule } from '@angular/material/dialog';
 
 export function highchartsFactory(): any[] {
@@ -65,7 +65,7 @@ const providerMatDialog: Provider = {
         width: '95vw',
         maxWidth: '54rem',
         maxHeight: '90vh',
-        panelClass: 'zano-mat-dialog',
+        panelClass: 'pdc-mat-dialog',
         hasBackdrop: true,
         disableClose: true,
     },
@@ -101,14 +101,14 @@ export class AppModule {
     private _sanitizer: DomSanitizer = inject(DomSanitizer);
 
     constructor() {
-        this._registerIcons(materialZanoIcons);
+        this._registerIcons(materialPdcIcons);
     }
 
     private _registerIcons(icons: Array<string>): void {
         icons.forEach((icon: string) => {
             this._matIconRegistry.addSvgIcon(
                 icon,
-                this._sanitizer.bypassSecurityTrustResourceUrl(`assets/material-zano-icons/${icon}.svg`)
+                this._sanitizer.bypassSecurityTrustResourceUrl(`assets/material-pdc-icons/${icon}.svg`)
             );
         });
     }

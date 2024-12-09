@@ -19,13 +19,13 @@ import { IntToMoneyPipeModule, MoneyToIntPipeModule, ShortStringPipe } from '@pa
 import { NgSelectModule } from '@ng-select/ng-select';
 import { VariablesService } from '@parts/services/variables.service';
 import { AssetBalance, AssetInfo } from '@api/models/assets.model';
-import { zanoAssetInfo } from '@parts/data/assets';
-import { regExpAliasName } from '@parts/utils/zano-validators';
+import { pdcAssetInfo } from '@parts/data/assets';
+import { regExpAliasName } from '@parts/utils/pdc-validators';
 import { BackendService } from '@api/services/backend.service';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { debounceTime, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { BigNumber } from 'bignumber.js';
-import { assetHasNotBeenAddedToWallet, insuficcientFunds } from '@parts/utils/zano-errors';
+import { assetHasNotBeenAddedToWallet, insuficcientFunds } from '@parts/utils/pdc-errors';
 import { ParamsCallRpc } from '@api/models/call_rpc.model';
 import { LoaderComponent } from '@parts/components/loader.component';
 import { Wallet } from '@api/models/wallet.model';
@@ -385,7 +385,7 @@ export class CreateSwapComponent implements OnDestroy {
                                 },
                             ],
                         }),
-                        asset_id: this.fb.control(zanoAssetInfo.asset_id, [Validators.required]),
+                        asset_id: this.fb.control(pdcAssetInfo.asset_id, [Validators.required]),
                     },
                     {
                         validators: [
@@ -446,7 +446,7 @@ export class CreateSwapComponent implements OnDestroy {
                             {
                                 value: this.currentWallet.balances.length <= 1
                                     ? null
-                                    : this.currentWallet.balances[1]?.asset_info?.asset_id ?? zanoAssetInfo.asset_id,
+                                    : this.currentWallet.balances[1]?.asset_info?.asset_id ?? pdcAssetInfo.asset_id,
                                 disabled: this.currentWallet.balances.length <= 1,
                             },
                             [Validators.required]

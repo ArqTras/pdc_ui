@@ -13,18 +13,18 @@ import { retry, startWith, switchMap, takeUntil } from 'rxjs/operators';
 import { paths, pathsChildrenAuth } from './pages/paths';
 import { hasOwnProperty } from '@parts/functions/has-own-property';
 import { Dialog } from '@angular/cdk/dialog';
-import { ZanoLoadersService } from '@parts/services/zano-loaders.service';
+import { PdcLoadersService } from '@parts/services/pdc-loaders.service';
 import { ParamsCallRpc } from '@api/models/call_rpc.model';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDialog } from '@angular/material/dialog';
-import { ApiZanoService } from '@api/services/api-zano.service';
+import { ApiPdcService } from '@api/services/api-pdc.service';
 import { WalletsService } from '@parts/services/wallets.service';
 
 @Component({
     selector: 'app-root',
     template: `
         <router-outlet
-            *ngIf="[0, 1, 2, 6].indexOf(variablesService.daemon_state) !== -1 && !(zanoLoadersService.getState('fullScreen') | async)"
+            *ngIf="[0, 1, 2, 6].indexOf(variablesService.daemon_state) !== -1 && !(pdcLoadersService.getState('fullScreen') | async)"
         ></router-outlet>
 
         <div *ngIf="[3, 4, 5].indexOf(variablesService.daemon_state) !== -1" class="preloader">
@@ -40,9 +40,9 @@ import { WalletsService } from '@parts/services/wallets.service';
             <div class="loading-bar"></div>
         </div>
 
-        <div class="preloader" *ngIf="zanoLoadersService.getState('fullScreen') | async">
+        <div class="preloader" *ngIf="pdcLoadersService.getState('fullScreen') | async">
             <p class="mb-2">
-                {{ zanoLoadersService.getMessage('fullScreen') | async | translate }}
+                {{ pdcLoadersService.getMessage('fullScreen') | async | translate }}
             </p>
             <div class="loading-bar"></div>
         </div>
@@ -91,8 +91,8 @@ export class AppComponent implements OnInit, OnDestroy {
         private store: Store,
         private dialog: Dialog,
         private matDialog: MatDialog,
-        public zanoLoadersService: ZanoLoadersService,
-        private _apiZanoService: ApiZanoService,
+        public pdcLoadersService: PdcLoadersService,
+        private _apiPdcService: ApiPdcService,
         private _walletsService: WalletsService,
         private _breakpointObserver: BreakpointObserver
     ) {
@@ -790,7 +790,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
                 setTimeout(() => {
                     this.backendService.getOptions();
-                    this._getZanoCurrentSupply();
+                    this._getPdcCurrentSupply();
                 }, 10 * 1000);
             },
             error: error => {
@@ -834,13 +834,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
     updateMoneyEquivalent(): void {
         this.http
-            .get('https://explorer.zano.org/api/price?asset=zano')
+            .get('https://explorer.pdc.org/api/price?asset=pdc')
             .pipe(take(1))
             .subscribe({
-                next: ({ data, success }: { data: { zano: { usd: number; usd_24h_change: number } }; success: boolean }): void => {
+                next: ({ data, success }: { data: { pdc: { usd: number; usd_24h_change: number } }; success: boolean }): void => {
                     if (success) {
-                        this.variablesService.zanoMoneyEquivalent = data['zano']['usd'];
-                        this.variablesService.zanoMoneyEquivalentPercent = data['zano']['usd_24h_change'];
+                        this.variablesService.pdcMoneyEquivalent = data['pdc']['usd'];
+                        this.variablesService.pdcMoneyEquivalentPercent = data['pdc']['usd_24h_change'];
                     }
                 },
                 error: error => {
@@ -948,7 +948,7 @@ export class AppComponent implements OnInit, OnDestroy {
         interval(updateTime)
             .pipe(
                 startWith(0),
-                switchMap(() => this._apiZanoService.getVerifiedAssetInfoWhitelist(type).pipe(retry(5))),
+                switchMap(() => this._apiPdcService.getVerifiedAssetInfoWhitelist(type).pipe(retry(5))),
                 takeUntil(this.destroy$)
             )
             .subscribe({
@@ -982,7 +982,7 @@ export class AppComponent implements OnInit, OnDestroy {
         });
     }
 
-    private _getZanoCurrentSupply(): void {
+    private _getPdcCurrentSupply(): void {
         const params: ParamsCallRpc = {
             jsonrpc: '2.0',
             id: 0,
@@ -994,7 +994,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         this.backendService.call_rpc(params, (status, response_data) => {
             this.ngZone.run(() => {
-                this.variablesService.zano_current_supply = response_data?.['result']?.['total_coins'] ?? 'Unknown';
+                this.variablesService.pdc_current_supply = response_data?.['result']?.['total_coins'] ?? 'Unknown';
             });
         });
     }

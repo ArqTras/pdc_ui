@@ -4,7 +4,7 @@ import { NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 type LoaderType = 'circle' | 'circle-2' | 'circle-3' | 'dots' | 'dots-2' | 'pulse';
 
 @Component({
-    selector: 'zano-loader',
+    selector: 'pdc-loader',
     standalone: true,
     template: `
         <ng-container [ngSwitch]="[type]">

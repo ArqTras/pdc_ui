@@ -449,11 +449,11 @@ export class BackendService {
         this.asyncCall(Commands.transfer, params, callback);
     }
 
-    setupJwtWalletRpc(value: { zanoCompation: boolean; secret: string }): void {
+    setupJwtWalletRpc(value: { pdcCompation: boolean; secret: string }): void {
         const { secret } = value;
 
         this.runCommand(Commands.setup_jwt_wallet_rpc, secret, () => {
-            this.variablesService.settings.zanoCompanionForm = value;
+            this.variablesService.settings.pdcCompanionForm = value;
             this.storeAppData();
         });
     }
@@ -793,7 +793,7 @@ export class BackendService {
         this.runCommand(Commands.get_wallet_info, { wallet_id }, callback);
     }
 
-    // Use for call rpc-api https://docs.zano.org/docs/build/rpc-api
+    // Use for call rpc-api https://docs.pdc.org/docs/build/rpc-api
     call_rpc(params: Partial<ParamsCallRpc>, callback?: (status: boolean, response_data: any) => void): void {
         this.runCommand(Commands.call_rpc, params, callback);
     }

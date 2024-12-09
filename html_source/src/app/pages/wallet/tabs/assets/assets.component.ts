@@ -13,7 +13,7 @@ import { BigNumber } from 'bignumber.js';
 import { LOCKED_BALANCE_HELP_PAGE } from '@parts/data/constants';
 import { IntToMoneyPipe } from '@parts/pipes';
 import { TranslateService } from '@ngx-translate/core';
-import { zanoAssetInfo } from '@parts/data/assets';
+import { pdcAssetInfo } from '@parts/data/assets';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 
 @Component({
@@ -129,7 +129,7 @@ export class AssetsComponent implements OnInit, OnDestroy {
         this._backendService.removeCustomAssetId(params, () => {
             this._ngZone.run(() => {
                 if (sendMoneyParams?.asset_id === asset_id) {
-                    this._walletsService.currentWallet.sendMoneyParams.asset_id = zanoAssetInfo.asset_id;
+                    this._walletsService.currentWallet.sendMoneyParams.asset_id = pdcAssetInfo.asset_id;
                 }
 
                 this._walletsService.updateWalletInfo(wallet_id);
@@ -189,13 +189,13 @@ export class AssetsComponent implements OnInit, OnDestroy {
             verifiedAssetInfoWhitelist$: { value: verifiedAssetInfoWhitelist },
         } = this.variablesService;
         /**
-         * You can't delete asset zano and assets that are in whitelist
+         * You can't delete asset pdc and assets that are in whitelist
          * */
-        return ![zanoAssetInfo.asset_id, ...verifiedAssetInfoWhitelist.map(i => i.asset_id)].includes(asset_id);
+        return ![pdcAssetInfo.asset_id, ...verifiedAssetInfoWhitelist.map(i => i.asset_id)].includes(asset_id);
     }
 
     isShowPriceColumns(balance: AssetBalance): boolean {
-        return balance.asset_info.asset_id === zanoAssetInfo.asset_id;
+        return balance.asset_info.asset_id === pdcAssetInfo.asset_id;
     }
 
     private _listenChangeWallet(): void {

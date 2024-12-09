@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
 import { VariablesService } from '@parts/services/variables.service';
 
 @Component({
-    selector: 'zano-alias-controls',
+    selector: 'pdc-alias-controls',
     standalone: true,
     imports: [CommonModule, FlexModule, IsAvailableAliasNamePipeModule, MatIconModule, TooltipModule, TranslateModule, RouterLink],
     templateUrl: './alias-controls.component.html',

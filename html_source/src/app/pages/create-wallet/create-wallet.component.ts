@@ -6,7 +6,7 @@ import { ModalService } from '@parts/services/modal.service';
 import { Router } from '@angular/router';
 import { Wallet } from '@api/models/wallet.model';
 import { TranslateService } from '@ngx-translate/core';
-import { regExpPassword, ZanoValidators } from '@parts/utils/zano-validators';
+import { regExpPassword, PdcValidators } from '@parts/utils/pdc-validators';
 import { WalletsService } from '@parts/services/wallets.service';
 import { BreadcrumbItems } from '@parts/components/breadcrumbs/breadcrumbs.models';
 import { BehaviorSubject } from 'rxjs';
@@ -101,7 +101,7 @@ import { BehaviorSubject } from 'rxjs';
                         </div>
 
                         <button *ngIf="createForm.controls.path.valid" class="outline big w-100 mb-2" disabled type="button">
-                            <mat-icon svgIcon="zano-check-circle" class="mr-1"></mat-icon>
+                            <mat-icon svgIcon="pdc-check-circle" class="mr-1"></mat-icon>
                             {{ savedWalletName }}
                         </button>
 
@@ -126,7 +126,7 @@ import { BehaviorSubject } from 'rxjs';
             </div>
         </div>
 
-        <ng-template #loaderTemp><zano-loader></zano-loader></ng-template>
+        <ng-template #loaderTemp><pdc-loader></pdc-loader></ng-template>
     `,
     styles: [
         `
@@ -159,13 +159,13 @@ export class CreateWalletComponent {
 
     createForm = this.fb.group(
         {
-            name: this.fb.control('', [Validators.required, ZanoValidators.duplicate(this.variablesService.walletNamesForComparisons)]),
+            name: this.fb.control('', [Validators.required, PdcValidators.duplicate(this.variablesService.walletNamesForComparisons)]),
             password: this.fb.control('', Validators.pattern(regExpPassword)),
             confirm: this.fb.control(''),
             path: this.fb.control('', Validators.required),
         },
         {
-            validators: [ZanoValidators.formMatch('password', 'confirm')],
+            validators: [PdcValidators.formMatch('password', 'confirm')],
         }
     );
 

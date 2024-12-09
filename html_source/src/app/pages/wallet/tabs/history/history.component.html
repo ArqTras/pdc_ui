@@ -1,6 +1,6 @@
 <div class="history-wrap" fxFlexFill fxLayout="column">
     <div class="wrap-table scrolled-content mb-2" fxFlex="1 1 auto">
-        <table class="zano-table history-table">
+        <table class="pdc-table history-table">
             <thead>
                 <tr>
                     <th>
@@ -47,7 +47,7 @@
                             <div class="cell-fee" *ngIf="transaction | isVisibleFee">
                                 <ng-container *ngIf="transaction?.subtransfers?.length">
                                     <ng-container *ngIf="transaction.fee; else noFeeTemplate">
-                                        <mat-icon svgIcon="zano-fire" class="mr-1" style="opacity: 50"></mat-icon>
+                                        <mat-icon svgIcon="pdc-fire" class="mr-1" style="opacity: 50"></mat-icon>
 
                                         {{ transaction.fee | intToMoney }}
                                         {{ variablesService.defaultTicker }}
@@ -83,7 +83,7 @@
                                         <span
                                             (contextmenu)="variablesService.onContextMenuOnlyCopy($event, transaction.remote_addresses[0])"
                                         >
-                                            {{ transaction.remote_addresses[0] | zanoShortString }}
+                                            {{ transaction.remote_addresses[0] | pdcShortString }}
                                         </span>
                                     </div>
                                     <ng-container *ngIf="transaction.remote_aliases && transaction.remote_aliases?.[0]?.trim()?.length">
@@ -164,7 +164,7 @@
                     "
                     class="btn-icon circle small mr-1"
                 >
-                    <mat-icon svgIcon="zano-arrow-left"></mat-icon>
+                    <mat-icon svgIcon="pdc-arrow-left"></mat-icon>
                 </button>
 
                 <ng-container *ngIf="!mining">
@@ -198,7 +198,7 @@
                     [disabled]="stop_paginate || variablesService.isCurrentWalletSync || !variablesService.isCurrentWalletLoaded"
                     class="btn-icon circle small ml-0_5"
                 >
-                    <mat-icon svgIcon="zano-arrow-right"></mat-icon>
+                    <mat-icon svgIcon="pdc-arrow-right"></mat-icon>
                 </button>
             </div>
             <div class="right" fxLayout="row" fxLayoutAlign=" center">

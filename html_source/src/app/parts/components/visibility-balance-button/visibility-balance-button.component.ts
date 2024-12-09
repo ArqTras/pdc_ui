@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { VariablesService } from '@parts/services/variables.service';
 
 @Component({
-    selector: 'zano-visibility-balance-button',
+    selector: 'pdc-visibility-balance-button',
     standalone: true,
     imports: [CommonModule, MatIconModule],
     templateUrl: './visibility-balance-button.component.html',

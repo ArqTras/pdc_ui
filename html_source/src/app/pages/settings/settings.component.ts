@@ -4,7 +4,7 @@ import { BackendService } from '@api/services/backend.service';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { scaleItems } from '@parts/data/scale-items';
-import { regExpPassword, ZanoValidators } from '@parts/utils/zano-validators';
+import { regExpPassword, PdcValidators } from '@parts/utils/pdc-validators';
 import { generateRandomString } from '@parts/utils/generate-random-string';
 import { debounceTime } from 'rxjs/operators';
 
@@ -39,17 +39,17 @@ export class SettingsComponent implements OnInit {
         },
         {
             validators: [
-                ZanoValidators.formMatch('new_password', 'new_confirmation'),
-                ZanoValidators.formMatch('password', 'appPass', 'pass_mismatch'),
+                PdcValidators.formMatch('new_password', 'new_confirmation'),
+                PdcValidators.formMatch('password', 'appPass', 'pass_mismatch'),
             ],
         }
     );
 
-    zanoCompanionForm: FormGroup<{
-        zanoCompation: FormControl<boolean>;
+    pdcCompanionForm: FormGroup<{
+        pdcCompation: FormControl<boolean>;
         secret: FormControl<string>;
     }> = this.fb.group({
-        zanoCompation: this.fb.nonNullable.control({ value: false, disabled: !this.variablesService.hasAppPass }),
+        pdcCompation: this.fb.nonNullable.control({ value: false, disabled: !this.variablesService.hasAppPass }),
         secret: this.fb.nonNullable.control(
             { value: '', disabled: false },
             {
@@ -142,7 +142,7 @@ export class SettingsComponent implements OnInit {
     ) {
         this.scale = this.variablesService.settings.scale;
         this.appUseTor = this.variablesService.settings.appUseTor;
-        this.zanoCompanionForm.setValue(this.variablesService.settings.zanoCompanionForm, { emitEvent: false });
+        this.pdcCompanionForm.setValue(this.variablesService.settings.pdcCompanionForm, { emitEvent: false });
 
         this.backend.getOptions();
     }
@@ -168,22 +168,22 @@ export class SettingsComponent implements OnInit {
             this.currentNotificationsState = !state;
         });
 
-        this.zanoCompanionForm.valueChanges.pipe(debounceTime(200)).subscribe({
+        this.pdcCompanionForm.valueChanges.pipe(debounceTime(200)).subscribe({
             next: () => {
-                const value = this.zanoCompanionForm.getRawValue();
-                const { zanoCompation, secret } = value;
+                const value = this.pdcCompanionForm.getRawValue();
+                const { pdcCompation, secret } = value;
 
-                if (zanoCompation && !secret) {
+                if (pdcCompation && !secret) {
                     this.generateSecret();
                     return;
                 }
 
-                if (!zanoCompation && secret) {
-                    this.zanoCompanionForm.controls.secret.patchValue('');
+                if (!pdcCompation && secret) {
+                    this.pdcCompanionForm.controls.secret.patchValue('');
                     return;
                 }
 
-                if ((zanoCompation && secret) || (!zanoCompation && !secret)) {
+                if ((pdcCompation && secret) || (!pdcCompation && !secret)) {
                     this.backend.setupJwtWalletRpc(value);
                     return;
                 }
@@ -192,7 +192,7 @@ export class SettingsComponent implements OnInit {
     }
 
     copySecret(): void {
-        const { secret } = this.zanoCompanionForm.getRawValue();
+        const { secret } = this.pdcCompanionForm.getRawValue();
 
         this.backend.setClipboard(secret);
 
@@ -214,7 +214,7 @@ export class SettingsComponent implements OnInit {
     }
 
     private generateSecret(): void {
-        this.zanoCompanionForm.get('secret').setValue(generateRandomString(40));
+        this.pdcCompanionForm.get('secret').setValue(generateRandomString(40));
     }
 
     regenerateSecret(): void {
@@ -242,7 +242,7 @@ export class SettingsComponent implements OnInit {
                         this.variablesService.startCountdown();
                     }
                     this.ngZone.run(() => {
-                        this.zanoCompanionForm.controls.zanoCompation.enable({ emitEvent: false });
+                        this.pdcCompanionForm.controls.pdcCompation.enable({ emitEvent: false });
                         this.onSave();
                     });
                 } else {

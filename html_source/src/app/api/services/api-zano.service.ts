@@ -7,11 +7,11 @@ import { VerifiedAssetInfoWhitelist } from '@api/models/assets.model';
 @Injectable({
     providedIn: 'root',
 })
-export class ApiZanoService {
+export class ApiPdcService {
     private httpClient = inject(HttpClient);
 
     getWrapInfo(): Observable<WrapInfo> {
-        return this.httpClient.get<WrapInfo>('https://wrapped.zano.org/api2/get_wrap_info');
+        return this.httpClient.get<WrapInfo>('https://wrapped.pdc.org/api2/get_wrap_info');
     }
 
     getVerifiedAssetInfoWhitelist(type: 'mainnet' | 'testnet'): Observable<{
@@ -20,9 +20,9 @@ export class ApiZanoService {
     }> {
         let url: string;
         if (type === 'mainnet') {
-            url = 'https://api.zano.org/assets_whitelist.json';
+            url = 'https://api.pdc.org/assets_whitelist.json';
         } else {
-            url = 'https://api.zano.org/assets_whitelist_testnet.json';
+            url = 'https://api.pdc.org/assets_whitelist_testnet.json';
         }
 
         return this.httpClient.get<{ assets: VerifiedAssetInfoWhitelist; signature: string }>(url, {

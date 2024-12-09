@@ -10,7 +10,7 @@ import { TooltipModule } from '@parts/directives';
 @Component({
     selector: 'app-transaction-details',
     template: `
-        <table class="zano-table">
+        <table class="pdc-table">
             <tbody>
                 <tr>
                     <td>{{ 'HISTORY.DETAILS.ID' | translate }}</td>
