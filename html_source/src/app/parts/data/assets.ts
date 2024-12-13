@@ -10,7 +10,7 @@ export const pdcAssetInfo: PdcAssetInfo = {
     logo: 'assets/currency-icons/pdc.svg',
     meta_info: '',
     owner: '0000000000000000000000000000000000000000000000000000000000000000',
-    price_url: 'https://explorer.pdc.org/api/price?asset=pdc',
+    price_url: 'https://explorer.privacydatacoin.com/api/price?asset=pdc',
     ticker: 'PDC',
     total_max_supply: 0,
 };

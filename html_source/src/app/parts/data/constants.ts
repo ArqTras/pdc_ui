@@ -7,5 +7,5 @@ export const LOCKED_BALANCE_HELP_PAGE = 'docs.pdc.org/docs/use/locked-balance';
 export const DOWNLOADS_PAGE_URL = 'pdc.org/downloads';
 export const ZARCANUM_MIGRATION = 'docs.pdc.org/docs/use/zarcanum-migration/';
 
-export const BLOCK_EXPLORER_TX_URL_PREFIX = 'explorer.pdc.org/transaction/';
-export const BLOCK_EXPLORER_TN_TX_URL_PREFIX = 'testnet-explorer.pdc.org/transaction/';
+export const BLOCK_EXPLORER_TX_URL_PREFIX = 'explorer.privacydatacoin.com/transaction/';
+export const BLOCK_EXPLORER_TN_TX_URL_PREFIX = 'testnet-explorer.privacydatacoin.com/transaction/';

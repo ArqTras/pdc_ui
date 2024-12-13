@@ -834,7 +834,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     updateMoneyEquivalent(): void {
         this.http
-            .get('https://explorer.pdc.org/api/price?asset=pdc')
+            .get('https://explorer.privacydatacoin.com/api/price?asset=pdc')
             .pipe(take(1))
             .subscribe({
                 next: ({ data, success }: { data: { pdc: { usd: number; usd_24h_change: number } }; success: boolean }): void => {

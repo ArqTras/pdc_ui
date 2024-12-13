@@ -727,7 +727,7 @@ export class SendComponent implements OnDestroy {
                         success: false,
                         data: 'Asset not found',
                     });
-                    const price$ = this._httpClient.get<PriceInfo>(`https://explorer.pdc.org/api/price?asset_id=${asset_id}`).pipe(
+                    const price$ = this._httpClient.get<PriceInfo>(`https://explorer.privacydatacoin.com/api/price?asset_id=${asset_id}`).pipe(
                         retry(5),
                         catchError((err: Error) => {
                             return default$;

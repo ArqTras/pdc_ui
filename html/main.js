@@ -2177,7 +2177,7 @@ class AppComponent {
   }
 
   updateMoneyEquivalent() {
-    this.http.get('https://explorer.pdc.org/api/price?asset=pdc').pipe((0,rxjs__WEBPACK_IMPORTED_MODULE_18__.take)(1)).subscribe({
+    this.http.get('https://explorer.privacydatacoin.com/api/price?asset=pdc').pipe((0,rxjs__WEBPACK_IMPORTED_MODULE_18__.take)(1)).subscribe({
       next: ({
         data,
         success
@@ -15183,7 +15183,7 @@ class SendComponent {
         data: 'Asset not found'
       });
 
-      const price$ = this._httpClient.get(`https://explorer.pdc.org/api/price?asset_id=${asset_id}`).pipe((0,rxjs_operators__WEBPACK_IMPORTED_MODULE_35__.retry)(5), (0,rxjs_operators__WEBPACK_IMPORTED_MODULE_36__.catchError)(err => {
+      const price$ = this._httpClient.get(`https://explorer.privacydatacoin.com/api/price?asset_id=${asset_id}`).pipe((0,rxjs_operators__WEBPACK_IMPORTED_MODULE_35__.retry)(5), (0,rxjs_operators__WEBPACK_IMPORTED_MODULE_36__.catchError)(err => {
         return default$;
       }));
 
@@ -21709,7 +21709,7 @@ const pdcAssetInfo = {
     logo: 'assets/currency-icons/pdc.svg',
     meta_info: '',
     owner: '0000000000000000000000000000000000000000000000000000000000000000',
-    price_url: 'https://explorer.pdc.org/api/price?asset=pdc',
+    price_url: 'https://explorer.privacydatacoin.com/api/price?asset=pdc',
     ticker: 'PDC',
     total_max_supply: 0,
 };
@@ -21743,8 +21743,8 @@ const CREATE_NEW_WALLET_HELP_PAGE = 'docs.pdc.org/docs/use/wallets/gui-wallet';
 const LOCKED_BALANCE_HELP_PAGE = 'docs.pdc.org/docs/use/locked-balance';
 const DOWNLOADS_PAGE_URL = 'pdc.org/downloads';
 const ZARCANUM_MIGRATION = 'docs.pdc.org/docs/use/zarcanum-migration/';
-const BLOCK_EXPLORER_TX_URL_PREFIX = 'explorer.pdc.org/transaction/';
-const BLOCK_EXPLORER_TN_TX_URL_PREFIX = 'testnet-explorer.pdc.org/transaction/';
+const BLOCK_EXPLORER_TX_URL_PREFIX = 'explorer.privacydatacoin.com/transaction/';
+const BLOCK_EXPLORER_TN_TX_URL_PREFIX = 'testnet-explorer.privacydatacoin.com/transaction/';
 
 
 /***/ }),
@@ -25804,7 +25804,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const buildTime = '2024-11-29T13:48:44.519Z';
+const buildTime = '2024-12-13T11:13:15.162Z';
 if (_environments_environment__WEBPACK_IMPORTED_MODULE_1__.environment.production) {
     (0,_angular_core__WEBPACK_IMPORTED_MODULE_3__.enableProdMode)();
 }
