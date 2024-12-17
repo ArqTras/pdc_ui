@@ -116,7 +116,7 @@ export class SidebarComponent implements OnDestroy {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-zano-logo.png';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.png';
     }
 
     ngOnDestroy(): void {
