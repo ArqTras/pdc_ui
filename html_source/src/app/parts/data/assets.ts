@@ -7,7 +7,7 @@ export const pdcAssetInfo: PdcAssetInfo = {
     current_supply: 0,
     decimal_point: 12,
     full_name: 'Pdc',
-    logo: 'assets/currency-icons/pdc.svg',
+    logo: 'assets/currency-icons/pdc.png',
     meta_info: '',
     owner: '0000000000000000000000000000000000000000000000000000000000000000',
     price_url: 'https://explorer.privacydatacoin.com/api/price?asset=pdc',
