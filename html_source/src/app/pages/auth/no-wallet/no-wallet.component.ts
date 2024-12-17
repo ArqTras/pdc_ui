@@ -15,7 +15,7 @@ export class NoWalletComponent {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.svg';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-zano-logo.png';
     }
 
     constructor(
