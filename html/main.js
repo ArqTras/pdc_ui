@@ -2709,7 +2709,7 @@ class SidebarComponent {
     }
     get pdcLogo() {
         const { settings: { isDarkTheme }, } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.png';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.png' : 'assets/icons/blue/light-pdc-logo.png';
     }
     ngOnDestroy() {
         this.destroy$.next();
@@ -3931,7 +3931,7 @@ class LoginComponent {
         isDarkTheme
       }
     } = this.variablesService;
-    return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.png';
+    return isDarkTheme ? 'assets/icons/blue/pdc-logo.png' : 'assets/icons/blue/light-pdc-logo.png';
   }
 
   ngOnInit() {
@@ -4280,7 +4280,7 @@ class NoWalletComponent {
     }
     get pdcLogo() {
         const { settings: { isDarkTheme }, } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.png';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.png' : 'assets/icons/blue/light-pdc-logo.png';
     }
     openWallet() {
         this.backend.openFileDialog(this.translate.instant('MAIN.CHOOSE_PATH'), '*', this.variablesService.settings.default_path, (file_status, file_data) => {

@@ -26,7 +26,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.png';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.png' : 'assets/icons/blue/light-pdc-logo.png';
     }
 
     regForm = this.fb.group(
