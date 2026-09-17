@@ -7,6 +7,26 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" type="image/x-icon" href="favicon.ico" />
         <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+        <script type="text/javascript">
+            (function () {
+                function patch(method) {
+                    var orig = history[method];
+                    history[method] = function (state, title, url) {
+                        try {
+                            return orig.apply(this, arguments);
+                        } catch (e) {
+                            try {
+                                return orig.call(this, state, title);
+                            } catch (e2) {
+                                return undefined;
+                            }
+                        }
+                    };
+                }
+                patch('pushState');
+                patch('replaceState');
+            })();
+        </script>
     </head>
     <body>
         <app-root></app-root>

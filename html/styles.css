@@ -14,8 +14,7 @@
   -moz-box-sizing: inherit;
   margin: 0;
   padding: 0;
-  -webkit-backface-visibility: hidden;
-  -webkit-touch-collout: none;
+  -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }html,
