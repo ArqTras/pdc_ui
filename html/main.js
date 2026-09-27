@@ -1675,7 +1675,11 @@ class AppComponent {
     this.displayNameMap = new Map([[_angular_cdk_layout__WEBPACK_IMPORTED_MODULE_15__.Breakpoints.XSmall, 'XSmall'], [_angular_cdk_layout__WEBPACK_IMPORTED_MODULE_15__.Breakpoints.Small, 'Small'], [_angular_cdk_layout__WEBPACK_IMPORTED_MODULE_15__.Breakpoints.Medium, 'Medium'], [_angular_cdk_layout__WEBPACK_IMPORTED_MODULE_15__.Breakpoints.Large, 'Large'], [_angular_cdk_layout__WEBPACK_IMPORTED_MODULE_15__.Breakpoints.XLarge, 'XLarge']]);
     this.allowedDaemonStates = [0, 1, 2, 6];
     this.loadingDaemonStates = [3, 4, 5];
-    this._destroy$ = new rxjs__WEBPACK_IMPORTED_MODULE_16__.Subject();
+    this._destroy$ = new rxjs__WEBPACK_IMPORTED_MODULE_16__.Subject(); // Theme CSS variables (--main-background, etc.) only exist under
+    // .dark/.light. Apply the default before QWebChannel so the preloader
+    // is visible if the backend bridge is slow.
+
+    this._renderer2.setAttribute(document.documentElement, 'class', this.variablesService.settings.isDarkTheme ? 'dark' : 'light');
 
     this._initTranslate();
 
