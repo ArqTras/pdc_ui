@@ -97,14 +97,14 @@ export class OpenWalletModalComponent implements OnInit, OnDestroy {
             this.wallet.notFound = true;
         });
 
-        const errorMessage = `${this._translateService.instant('OPEN_WALLET.FILE_NOT_FOUND1')}:<br>${this.wallet.path}${this._translateService.instant(
-            'OPEN_WALLET.FILE_NOT_FOUND2'
-        )}`;
+        const errorMessage = `${this._translateService.instant('OPEN_WALLET.FILE_NOT_FOUND1')}:<br>${
+            this.wallet.path
+        }${this._translateService.instant('OPEN_WALLET.FILE_NOT_FOUND2')}`;
         this._modalService.prepareModal('error', errorMessage);
     }
 
     handleSuccessfulWalletOpen(open_data): void {
-        const walletExists = this.variablesService.wallets.some(wallet => wallet.address === open_data['wi'].address);
+        const walletExists = this.variablesService.wallets.some((wallet) => wallet.address === open_data['wi'].address);
 
         if (walletExists) {
             this._modalService.prepareModal('error', 'OPEN_WALLET.WITH_ADDRESS_ALREADY_OPEN');
@@ -129,12 +129,11 @@ export class OpenWalletModalComponent implements OnInit, OnDestroy {
             this.wallet.pass,
             open_data['wi'].path,
             open_data['wi'].address,
-            open_data['wi'].balance,
+            open_data['wi'].balances,
             open_data['wi'].unlocked_balance,
             open_data['wi'].mined_total,
             open_data['wi'].tracking_key
         );
-        newWallet.alias = this._backendService.getWalletAlias(newWallet.address);
         newWallet.is_auditable = open_data['wi'].is_auditable;
         newWallet.is_watch_only = open_data['wi'].is_watch_only;
         newWallet.currentPage = 1;

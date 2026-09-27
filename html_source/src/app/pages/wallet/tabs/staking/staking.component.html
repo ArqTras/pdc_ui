@@ -1,14 +1,8 @@
-<div class="chart-wrap" fxFlexFill fxLayout="column">
+<section *ngIf="variablesService.current_wallet.loaded; else skeletonTemplate" class="chart-wrap" fxFlexFill fxLayout="column">
     <div class="scrolled-content h-100" fxFlex="1 1 auto" fxLayout="column">
         <div class="chart-header mb-1" fxFlex="0 0 auto" fxLayout="column">
             <div class="row" fxFlex="0 0 auto" fxLayout="row nowrap" fxLayoutAlign="space-between start" fxLayoutGap="1rem">
-                <div
-                    class="left"
-                    fxFlex="1 1 calc(50% - 0.5rem)"
-                    fxLayout="row wrap"
-                    fxLayoutAlign="start center"
-                    fxLayoutGap="1rem"
-                >
+                <div class="left" fxFlex="1 1 calc(50% - 0.5rem)" fxLayout="row wrap" fxLayoutAlign="start center" fxLayoutGap="1rem">
                     <div class="items" fxLayout="row wrap" fxLayoutGap="1rem">
                         <div
                             *ngIf="isShowStagingSwitch"
@@ -22,44 +16,44 @@
 
                             <div class="right overflow-hidden w-100" fxLayout="row" fxLayoutAlign="end center">
                                 <app-staking-switch
-                                    [(staking)]="variablesService.currentWallet.staking"
-                                    [wallet_id]="variablesService.currentWallet.wallet_id"
+                                    [(staking)]="variablesService.current_wallet.staking"
+                                    [wallet_id]="variablesService.current_wallet.wallet_id"
                                 >
                                 </app-staking-switch>
                             </div>
                         </div>
-                        <div
-                            class="item overflow-hidden p-1 border-radius-0_8-rem mb-1"
-                            fxLayout="row nowrap"
-                            fxLayoutAlign="space-between center"
-                        >
-                            <div class="left overflow-hidden mr-1" fxLayout="row" fxLayoutAlign="start center">
-                                {{ 'STAKING.TITLE_PENDING' | translate }}
-                                :
-                            </div>
-                            <div class="right overflow-hidden w-100" fxLayout="row" fxLayoutAlign="end center">
-                                <div class="text-ellipsis mr-1">
-                                    {{ pending.total | intToMoney }}
+                        <div class="item balances overflow-hidden mb-1">
+                            <div class="balance-row">
+                                <div class="label">{{ 'STAKING.TITLE_PENDING' | translate }}:</div>
+                                <div class="value">
+                                    <span
+                                        class="number text-ellipsis"
+                                        [tooltip]="pending.total | intToMoney"
+                                        [showWhenNoOverflow]="false"
+                                        [placement]="'bottom'"
+                                    >
+                                        {{ pending.total | intToMoney }}
+                                    </span>
+                                    <span class="ticker">{{ variablesService.defaultTicker }}</span>
                                 </div>
-                                {{ variablesService.defaultTicker }}
+                            </div>
+                            <div class="balance-row">
+                                <div class="label">{{ 'STAKING.TITLE_TOTAL' | translate }}:</div>
+                                <div class="value">
+                                    <span
+                                        class="number text-ellipsis"
+                                        [tooltip]="total | intToMoney"
+                                        [showWhenNoOverflow]="false"
+                                        [placement]="'bottom'"
+                                    >
+                                        {{ total | intToMoney }}
+                                    </span>
+                                    <span class="ticker">{{ variablesService.defaultTicker }}</span>
+                                </div>
                             </div>
                         </div>
-                        <div
-                            class="item overflow-hidden p-1 border-radius-0_8-rem mb-1"
-                            fxLayout="row nowrap"
-                            fxLayoutAlign="space-between center"
-                        >
-                            <div class="left overflow-hidden mr-1" fxLayout="row" fxLayoutAlign="start center">
-                                {{ 'STAKING.TITLE_TOTAL' | translate }}
-                                :
-                            </div>
-                            <div class="right overflow-hidden w-100" fxLayout="row" fxLayoutAlign="end center">
-                                <div class="text-ellipsis mr-1">
-                                    {{ total | intToMoney }}
-                                </div>
-                                {{ variablesService.defaultTicker }}
-                            </div>
-                        </div>
+                        <app-staking-time-to-block-card *ngIf="variablesService.current_wallet.staking" class="mb-1">
+                        </app-staking-time-to-block-card>
                     </div>
                 </div>
                 <div class="right" fxFlex="1 1 calc(50% - 0.5rem)" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="1rem">
@@ -86,10 +80,8 @@
                         [formControl]="filtersForm.controls.group"
                         class="selected-group max-w-19-rem w-100"
                     >
-                        <ng-template let-item="item" ng-label-tmp>
-                            Sort by {{ (item.title | translate | lowercase) + 's' }}
-                        </ng-template>
-                        <ng-template let-index="index" let-item="item" ng-option-tmp>
+                        <ng-template let-item="item" ng-label-tmp> Sort by {{ (item.title | translate | lowercase) + 's' }} </ng-template>
+                        <ng-template let-item="item" ng-option-tmp>
                             {{ item.title | translate }}
                         </ng-template>
                     </ng-select>
@@ -107,7 +99,7 @@
             >
                 <div class="left"></div>
                 <div class="right" fxLayoutAlign="end center">
-                    <div *ngIf="pointDetails && pointDetails.date" class="selected overflow-hidden">
+                    <div *ngIf="pointDetails && pointDetails.date" aria-live="polite" class="selected overflow-hidden">
                         <div class="overflow-hidden" fxLayout="row">
                             <div class="text-ellipsis">
                                 {{ pointDetails.date | date : 'EEEE, MMMM d, y' }}
@@ -130,6 +122,8 @@
             <ng-container *ngFor="let item of periodItems; let last = last">
                 <button
                     (click)="filtersForm.controls.period.patchValue(item.value)"
+                    [attr.aria-pressed]="item.value === filtersForm.controls.period.value"
+                    [attr.aria-label]="('ACCESSIBILITY.STAKING.LABELS.LABEL1' | translate) + (item.title | translate)"
                     [class.active]="item.value === filtersForm.controls.period.value"
                     [class.mr-1]="!last"
                     [class.outline]="!last"
@@ -142,4 +136,26 @@
             </ng-container>
         </div>
     </div>
-</div>
+</section>
+
+<ng-template #skeletonTemplate>
+    <section class="skeleton-staking overflow-hidden">
+        <div class="skeleton-staking-header mb-2">
+            <div class="skeleton" style="max-width: 18.6rem; width: 100%; height: 4rem"></div>
+            <div class="skeleton ml-2" style="max-width: 14rem; width: 100%; height: 4rem"></div>
+            <div class="skeleton ml-2 mr-2" style="max-width: 32.9rem; width: 100%; height: 4rem"></div>
+            <div class="skeleton ml-auto" style="max-width: 20rem; width: 100%; height: 4rem"></div>
+        </div>
+
+        <div class="skeleton skeleton-staking-chart mb-2"></div>
+
+        <div class="skeleton-staking-footer">
+            <div
+                class="skeleton"
+                *ngFor="let _ of Array.from({ length: 7 }); let first = first"
+                [class.ml-2]="!first"
+                style="width: 100%; height: 5.3rem"
+            ></div>
+        </div>
+    </section>
+</ng-template>

@@ -4,10 +4,9 @@ import { BackendService, Commands } from '@api/services/backend.service';
 import { Observable, Subject, take } from 'rxjs';
 import { StateKeys, Store, Sync } from '@store/store';
 import { distinctUntilChanged, filter, map, takeUntil } from 'rxjs/operators';
-import { hasOwnProperty } from '@parts/functions/has-own-property';
 import { ConfirmModalComponent, ConfirmModalData } from '@parts/modals/confirm-modal/confirm-modal.component';
-import { ExportHistoryModalComponent } from './modals/export-history-modal/export-history-modal.component';
-import { AddCustomTokenComponent } from './modals/add-custom-token/add-custom-token.component';
+import { ExportHistoryModalComponent } from './dialogs/export-history-modal/export-history-modal.component';
+import { AddCustomTokenComponent } from './dialogs/add-custom-token/add-custom-token.component';
 import { AssetBalance } from '@api/models/assets.model';
 import { AssetDetailsComponent } from '@parts/modals/asset-details/asset-details.component';
 import { WalletsService } from '@parts/services/wallets.service';
@@ -63,7 +62,7 @@ const objTabs: { [key in TabNameKeys]: Tab } = {
     },
     swap: {
         id: 'swap',
-        title: 'Swap',
+        title: 'WALLET.TABS.P2P_SWAP',
         icon: 'pdc-swap',
         link: '/swap',
         disabled: false,
@@ -113,8 +112,6 @@ export class WalletComponent implements OnInit, OnDestroy {
 
     walletLoaded = false;
 
-    openDropdown: boolean;
-
     walletSyncVisible = false;
 
     tabs: Tab[] = [];
@@ -126,15 +123,15 @@ export class WalletComponent implements OnInit, OnDestroy {
     private readonly _matDialog: MatDialog = inject(MatDialog);
 
     get isShowMigrateAlert(): boolean {
-        const {
-            currentWallet
-        } = this.variablesService;
+        const { current_wallet, daemon_state } = this.variablesService;
 
-        if (!currentWallet) { return false; }
+        if (!current_wallet) {
+            return false;
+        }
 
-        const { is_auditable, is_watch_only, has_bare_unspent_outputs } = currentWallet;
+        const { is_auditable, is_watch_only, has_bare_unspent_outputs, loaded } = current_wallet;
 
-        return !is_auditable && !is_watch_only && has_bare_unspent_outputs;
+        return !is_auditable && !is_watch_only && loaded && daemon_state === 2 && has_bare_unspent_outputs;
     }
 
     constructor(
@@ -145,19 +142,25 @@ export class WalletComponent implements OnInit, OnDestroy {
         private walletsService: WalletsService,
         private router: Router
     ) {
-        if (!this.variablesService.currentWallet && this.variablesService.wallets.length > 0) {
-            this.variablesService.setCurrentWallet(0);
+        if (!this.variablesService.current_wallet && this.variablesService.wallets.length > 0) {
+            this.variablesService.setCurrentWallet(this.variablesService.wallets[0].wallet_id);
         }
-        this.walletLoaded = this.variablesService.currentWallet.loaded;
 
-        this.variablesService.currentWalletChangedEvent.pipe(takeUntil(this.destroy$)).subscribe({
+        if (!this.variablesService.current_wallet) {
+            this.router.navigate(['/']).then();
+            return;
+        }
+
+        this.walletLoaded = this.variablesService.current_wallet.loaded;
+
+        this.variablesService.currentWalletChanged$.pipe(takeUntil(this.destroy$)).subscribe({
             next: (wallet: Wallet) => {
                 this.createTabs(wallet);
                 const disabled = !wallet.loaded;
                 this.setDisabledTabs(['send', 'swap', 'staking', 'custom-assets'], disabled);
 
                 this.variablesService.is_hardfok_active$.pipe(take(1)).subscribe({
-                    next: value => {
+                    next: (value) => {
                         const hidden = !value;
                         this.setHiddenTabs(['swap'], hidden);
                     },
@@ -166,14 +169,10 @@ export class WalletComponent implements OnInit, OnDestroy {
         });
 
         this.variablesService.is_hardfok_active$.pipe(takeUntil(this.destroy$)).subscribe({
-            next: value => {
+            next: (value) => {
                 const hidden = !value;
                 this.setHiddenTabs(['swap'], hidden);
             },
-        });
-
-        this.router.events.pipe(takeUntil(this.destroy$)).subscribe((e: RouterEvent) => {
-            this.navigationInterceptor(e);
         });
     }
 
@@ -220,21 +219,16 @@ export class WalletComponent implements OnInit, OnDestroy {
 
     @HostListener('document:keydown.shift', ['$event.key'])
     onKeyPressed(): void {
-        if (!this.openDropdown) {
-            this.walletSyncVisible = true;
-        }
+        this.walletSyncVisible = true;
     }
 
     @HostListener('document:keyup.shift', ['$event.key'])
     onKeyUpPressed(): void {
-        if (!this.openDropdown) {
-            this.walletSyncVisible = false;
-        }
+        this.walletSyncVisible = false;
     }
 
     ngOnInit(): void {
         this.settingsButtonInterval = setInterval(() => {
-            // tslint:disable-next-line:triple-equals
             if (this.variablesService.daemon_state == 2 || this.walletLoaded) {
                 this.settingsButtonDisabled = false;
                 clearInterval(this.settingsButtonInterval);
@@ -245,12 +239,17 @@ export class WalletComponent implements OnInit, OnDestroy {
             .pipe(filter(Boolean), distinctUntilChanged(), takeUntil(this.destroy$))
             .subscribe({
                 next: (value: any) => {
-                    const data = value.filter((item: Sync) => item.wallet_id === this.variablesService.currentWallet.wallet_id)[0];
+                    const currentWallet = this.variablesService.current_wallet;
+                    if (!currentWallet) {
+                        return;
+                    }
+
+                    const data = value.filter((item: Sync) => item.wallet_id === currentWallet.wallet_id)[0];
                     if (data && !data.sync) {
                         let in_progress;
                         const values = this.store.state.sync;
                         if (values && values.length > 0) {
-                            in_progress = values.filter(item => item.sync);
+                            in_progress = values.filter((item) => item.sync);
                             this.variablesService.sync_started = !!(in_progress && in_progress.length);
                             if (!in_progress) {
                                 this.variablesService.sync_started = false;
@@ -263,26 +262,12 @@ export class WalletComponent implements OnInit, OnDestroy {
                     }
                 },
             });
-        if (hasOwnProperty(this.variablesService.currentWallet.alias, 'name')) {
-            this.variablesService.currentWallet.wakeAlias = false;
-        }
-        this.variablesService.getAliasChangedEvent.pipe(takeUntil(this.destroy$)).subscribe({
-            next: () => {
-                if (hasOwnProperty(this.variablesService.currentWallet.alias, 'name')) {
-                    this.variablesService.currentWallet.wakeAlias = false;
-                }
-            },
-        });
         this.updateWalletStatus();
-    }
 
-    toggleMenuDropdown(): void {
-        if (!this.openDropdown) {
-            this.openDropdown = true;
-        } else {
-            this.openDropdown = false;
-            this.walletSyncVisible = false;
-        }
+        this.loader = false;
+        this.router.events.pipe(takeUntil(this.destroy$)).subscribe((e: RouterEvent) => {
+            this.navigationInterceptor(e);
+        });
     }
 
     resyncCurrentWallet(wallet_id: number): void {
@@ -313,11 +298,11 @@ export class WalletComponent implements OnInit, OnDestroy {
             .open<AddCustomTokenComponent, void, AssetBalance | undefined>(AddCustomTokenComponent)
             .afterClosed()
             .pipe(
-                filter(response_data => Boolean(response_data)),
+                filter((response_data) => Boolean(response_data)),
                 takeUntil(this.destroy$)
             )
             .subscribe({
-                next: asset => {
+                next: (asset) => {
                     const config: MatDialogConfig = {
                         data: {
                             asset_info: asset.asset_info,
@@ -341,19 +326,21 @@ export class WalletComponent implements OnInit, OnDestroy {
     }
 
     updateWalletStatus(): void {
-        this.backend.eventSubscribe(Commands.wallet_sync_progress, data => {
+        this.backend.eventSubscribe(Commands.wallet_sync_progress, (data) => {
             const wallet_id = data.wallet_id;
-            if (wallet_id === this.variablesService.currentWallet.wallet_id) {
+            const currentWallet = this.variablesService.current_wallet;
+            if (currentWallet && wallet_id === currentWallet.wallet_id) {
                 this.ngZone.run(() => {
                     this.walletLoaded = false;
                 });
             }
         });
-        this.backend.eventSubscribe(Commands.update_wallet_status, data => {
+        this.backend.eventSubscribe(Commands.update_wallet_status, (data) => {
             const wallet_state = data.wallet_state;
             const wallet_id = data.wallet_id;
             this.ngZone.run(() => {
-                if (wallet_id !== this.variablesService.currentWallet.wallet_id) {
+                const currentWallet = this.variablesService.current_wallet;
+                if (!currentWallet || wallet_id !== currentWallet.wallet_id) {
                     return;
                 }
 
@@ -369,7 +356,7 @@ export class WalletComponent implements OnInit, OnDestroy {
     }
 
     setHiddenTabs(ids: string[], hidden: boolean): void {
-        this.tabs.forEach(tab => {
+        this.tabs.forEach((tab) => {
             if (ids.includes(tab.id)) {
                 tab.hidden = hidden;
             }
@@ -377,7 +364,7 @@ export class WalletComponent implements OnInit, OnDestroy {
     }
 
     setDisabledTabs(ids: string[], disabled: boolean): void {
-        this.tabs.forEach(tab => {
+        this.tabs.forEach((tab) => {
             if (ids.includes(tab.id)) {
                 tab.disabled = disabled;
             }

@@ -35,7 +35,7 @@ export class Store {
     }
 
     select<T>(name: StateKeys): Observable<T> {
-        return this.store.pipe(map(state => state[name])) as unknown as Observable<T>;
+        return this.store.pipe(map((state) => state[name])) as unknown as Observable<T>;
     }
 
     set(name: StateKeys, value: any): void {

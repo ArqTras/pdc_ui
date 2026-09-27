@@ -1,4 +1,9 @@
 .assets-table {
+    .cell-name {
+        display: flex;
+        align-items: center;
+    }
+
     .token-logo {
         background: var(--blue-300);
         min-width: 5.5rem;
@@ -11,7 +16,8 @@
         border-radius: 50%;
         overflow: hidden;
 
-        img, svg {
+        img,
+        svg {
             width: 100%;
             height: 100%;
             object-fit: contain;

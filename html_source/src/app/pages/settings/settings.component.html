@@ -1,17 +1,17 @@
-<div class="page-container">
-    <div class="toolbar mb-2">
+<main tabindex="0" appAutofocus class="page-container">
+    <section class="toolbar mb-2">
         <div class="left">
             <app-back-button></app-back-button>
-            <h1 class="ml-2">{{ 'SETTINGS.TITLE' | translate }}</h1>
+            <h1 class="ml-2" aria-live="assertive">{{ 'SETTINGS.TITLE' | translate }}</h1>
         </div>
         <div class="right"></div>
-    </div>
+    </section>
 
-    <div class="page-content">
+    <section class="page-content">
         <div class="scrolled-content">
-            <div class="settings" fxFlex="0 1 50rem" fxFlexFill fxLayout="column" fxLayoutAlign="start stretch">
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.LANGUAGE.TITLE' | translate }}</label>
+            <section class="settings">
+                <fieldset class="form__field">
+                    <label for="language-label">{{ 'SETTINGS.LANGUAGE.TITLE' | translate }}</label>
                     <ng-select
                         (change)="onLanguageChange()"
                         [(ngModel)]="variablesService.settings.language"
@@ -20,19 +20,17 @@
                         [searchable]="false"
                         bindLabel="language"
                         bindValue="name"
-                        class="with-circle"
+                        class="select-with-circle"
+                        id="language-label"
                     >
-                        <ng-template let-item="item" ng-label-tmp>
-                            {{ item.language | translate }}
-                        </ng-template>
-                        <ng-template let-index="index" let-item="item" ng-option-tmp>
+                        <ng-template let-item="item" ng-label-tmp ng-option-tmp>
                             {{ item.language | translate }}
                         </ng-template>
                     </ng-select>
-                </div>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.APP_LOCK.TITLE' | translate }}</label>
+                <fieldset class="form__field">
+                    <label for="app-lock-label">{{ 'SETTINGS.APP_LOCK.TITLE' | translate }}</label>
                     <ng-select
                         (change)="onLockChange()"
                         [(ngModel)]="variablesService.settings.appLockTime"
@@ -41,96 +39,177 @@
                         [searchable]="false"
                         bindLabel="translationKey"
                         bindValue="time"
-                        class="with-circle"
+                        class="select-with-circle"
+                        id="app-lock-label"
                     >
-                        <ng-template let-item="item" ng-label-tmp>
-                            {{ item.translationKey | translate }}
-                        </ng-template>
-                        <ng-template let-index="index" let-item="item" ng-option-tmp>
+                        <ng-template let-item="item" ng-label-tmp ng-option-tmp>
                             {{ item.translationKey | translate }}
                         </ng-template>
                     </ng-select>
-                </div>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.SCALE.TITLE' | translate }}</label>
+                <fieldset class="form__field">
+                    <label for="scale-label">{{ 'SETTINGS.SCALE.TITLE' | translate }}</label>
                     <ng-select
                         (change)="setScale()"
                         [(ngModel)]="variablesService.settings.scale"
                         [clearable]="false"
                         [items]="appScaleOptions"
                         [searchable]="false"
-                        bindLabel="name"
+                        bindLabel="label"
                         bindValue="value"
-                        class="with-circle"
+                        class="select-with-circle"
+                        id="scale-label"
                     >
-                        <ng-template let-item="item" ng-label-tmp>
-                            {{ item.name | translate }}
-                        </ng-template>
-                        <ng-template let-index="index" let-item="item" ng-option-tmp>
-                            {{ item.name | translate }}
+                        <ng-template let-item="item" ng-label-tmp ng-option-tmp>
+                            {{ item.label | translate }}
                         </ng-template>
                     </ng-select>
-                </div>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.APP_LOG_TITLE' | translate }}</label>
+                <fieldset class="form__field">
+                    <label for="app-log-label">{{ 'SETTINGS.APP_LOG_TITLE' | translate }}</label>
                     <ng-select
                         (change)="onLogChange()"
                         [(ngModel)]="variablesService.settings.appLog"
                         [clearable]="false"
-                        [items]="appLogOptions"
+                        [items]="appLogItems"
                         [searchable]="false"
-                        bindLabel="id"
+                        bindLabel="label"
                         bindValue="id"
-                        class="with-circle"
+                        class="select-log select-with-circle"
+                        id="app-log-label"
+                    >
+                        <ng-template let-item="item" ng-label-tmp>
+                            <span
+                                [ngClass]="{
+                                    'log-item--warning': item.type === 'WARNING'
+                                }"
+                            >
+                                [{{ item.id }}] {{ item.label | translate }}
+                            </span>
+                        </ng-template>
+
+                        <ng-template let-item="item" ng-option-tmp>
+                            <span
+                                class="white-space--initial"
+                                [ngClass]="{
+                                    'log-item--warning': item.type === 'WARNING'
+                                }"
+                            >
+                                [{{ item.id }}] {{ item.label | translate }}
+                            </span>
+                        </ng-template>
+                    </ng-select>
+                    <div class="log-files-row" [attr.aria-busy]="isLogSizeLoading || isClearingLogs">
+                        <span aria-live="polite" aria-atomic="true">
+                            {{ 'SETTINGS.LOG_FILES.LABEL' | translate }}
+                            <ng-container *ngIf="isLogSizeLoading; else logFilesSizeTemplate">
+                                {{ 'SETTINGS.LOG_FILES.CALCULATING' | translate }}
+                            </ng-container>
+                            <ng-template #logFilesSizeTemplate>
+                                <ng-container *ngIf="logFilesSize !== null; else logFilesSizeUnavailableTemplate">
+                                    {{ formattedLogFilesSize }}
+                                </ng-container>
+                                <ng-template #logFilesSizeUnavailableTemplate>
+                                    {{ 'SETTINGS.LOG_FILES.SIZE_UNAVAILABLE' | translate }}
+                                </ng-template>
+                            </ng-template>
+                        </span>
+                        <div class="log-files-actions">
+                            <button
+                                *ngIf="!isLogSizeLoading && logFilesSize === null"
+                                (click)="refreshLogFilesSize()"
+                                [disabled]="isClearingLogs || isClearLogsConfirmationOpen"
+                                class="outline log-files-button"
+                                type="button"
+                            >
+                                {{ 'SETTINGS.LOG_FILES.RETRY' | translate }}
+                            </button>
+                            <button (click)="confirmClearLogs()" [disabled]="!canClearLogs" class="outline log-files-button" type="button">
+                                {{ (isClearingLogs ? 'SETTINGS.LOG_FILES.CLEARING' : 'SETTINGS.LOG_FILES.CLEAR') | translate }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="log-files-result" aria-live="polite" aria-atomic="true">
+                        <p *ngIf="logClearResult === 'error'">{{ 'SETTINGS.LOG_FILES.ERROR' | translate }}</p>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form__field">
+                    <label for="currency-label">{{ 'SETTINGS.CURRENCY_TITLE' | translate }}</label>
+                    <ng-select
+                        (change)="onCurrencyChange()"
+                        [(ngModel)]="variablesService.settings.currency"
+                        [clearable]="false"
+                        [items]="currenciesItems"
+                        [searchable]="false"
+                        bindLabel="label"
+                        bindValue="id"
+                        class="select-with-circle"
+                        id="currency-label"
                     >
                     </ng-select>
-                </div>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.NOTIFICATIONS' | translate }}</label>
-                    <app-switch (emitChange)="toggleNotifications()" [value]="currentNotificationsState"></app-switch>
-                </div>
+                <fieldset class="form__field">
+                    <label id="notifications-label">{{ 'SETTINGS.NOTIFICATIONS' | translate }}</label>
+                    <app-switch
+                        (emitChange)="toggleNotifications()"
+                        [value]="currentNotificationsState"
+                        aria-labelledby="notifications-label"
+                    ></app-switch>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.USE_TOR_TO_RELAY_TRANSACTIONS' | translate }} (Temporarily disabled)</label>
-                    <app-switch (emitChange)="toggleUseTor()" [disabled]="true"
-                                [value]="false && appUseTor"></app-switch>
-                </div>
+                <fieldset class="form__field">
+                    <label id="use-tor-to-relay-transactions-label"
+                        >{{ 'SETTINGS.USE_TOR_TO_RELAY_TRANSACTIONS' | translate }} (Temporarily disabled)</label
+                    >
+                    <app-switch
+                        (emitChange)="toggleUseTor()"
+                        [disabled]="true"
+                        [value]="false && appUseTor"
+                        aria-labelledby="use-tor-to-relay-transactions-label"
+                    ></app-switch>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.DARK_THEME' | translate }}</label>
-                    <app-switch (emitChange)="toggleDarkTheme()"
-                                [value]="variablesService.settings.isDarkTheme"></app-switch>
-                </div>
+                <fieldset class="form__field">
+                    <label id="dark-theme-label">{{ 'SETTINGS.DARK_THEME' | translate }}</label>
+                    <app-switch
+                        (emitChange)="toggleDarkTheme()"
+                        [value]="variablesService.settings.isDarkTheme"
+                        aria-labelledby="dark-theme-label"
+                    ></app-switch>
+                </fieldset>
 
-                <div class="form__field">
-                    <label>{{ 'SETTINGS.SHOW_BALANCE' | translate }}</label>
-                    <app-switch (emitChange)="showPrice()"
-                                [value]="this.variablesService.visibilityBalance$ | async"></app-switch>
-                </div>
+                <fieldset class="form__field">
+                    <label id="show-balance-label">{{ 'SETTINGS.SHOW_BALANCE' | translate }}</label>
+                    <app-switch
+                        (emitChange)="toggleVisibilityBalance()"
+                        [value]="this.variablesService.visibilityBalance$ | async"
+                        aria-labelledby="show-balance-label"
+                    ></app-switch>
+                </fieldset>
 
-                <form [formGroup]="pdcCompanionForm">
+                <form role="form" [formGroup]="zanoCompanionForm">
                     <div class="form__field">
-                        <label>
+                        <label id="pdc-companion-label">
                             {{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL1' | translate }}
                             <ng-container *ngIf="!variablesService.appPass">
                                 {{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL4' | translate }}
                             </ng-container>
                         </label>
-                        <app-switch formControlName="pdcCompation"></app-switch>
+                        <app-switch aria-labelledby="pdc-companion-label" formControlName="zanoCompation"></app-switch>
                     </div>
-                    <ng-container *ngIf="pdcCompanionForm.controls.pdcCompation.getRawValue()">
+                    <ng-container *ngIf="zanoCompanionForm.controls.zanoCompation.getRawValue()">
                         <div class="form__card">
-                            <div class="form__field form__field--secret">
-                                <label
-                                    for="field-secret">{{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL2' | translate }}</label>
+                            <fieldset class="form__field form__field--secret">
+                                <label for="field-secret">{{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL2' | translate }}</label>
                                 <input
                                     (contextmenu)="
-                                        variablesService.onContextMenuOnlyCopy($event, pdcCompanionForm.controls['secret'].value)
+                                        variablesService.onContextMenuOnlyCopy($event, zanoCompanionForm.controls['secret'].value)
                                     "
-                                    [class.invalid]="pdcCompanionForm.controls['secret'].invalid"
+                                    [class.invalid]="zanoCompanionForm.controls['secret'].invalid"
                                     [readonly]="true"
                                     class="form__field--input"
                                     formControlName="secret"
@@ -138,22 +217,37 @@
                                     type="text"
                                 />
 
-                                <button (click)="copySecret()" class="btn--copy">
+                                <button
+                                    (click)="copySecret()"
+                                    [attr.aria-label]="'ACCESSIBILITY.SETTINGS.ARIA_LABEL2' | translate"
+                                    class="btn--copy"
+                                    type="button"
+                                >
                                     <mat-icon svgIcon="pdc-copy"></mat-icon>
                                 </button>
 
-                                <button (click)="regenerateSecret()" class="btn--regenerate">
+                                <button
+                                    (click)="regenerateSecret()"
+                                    [attr.aria-label]="'ACCESSIBILITY.SETTINGS.ARIA_LABEL3' | translate"
+                                    class="btn--regenerate"
+                                    type="button"
+                                >
                                     <mat-icon svgIcon="pdc-regenerate"></mat-icon>
                                 </button>
 
-                                <div *ngIf="isSecretWasCopied" class="info success" style="text-align: right">
+                                <div
+                                    *ngIf="isSecretWasCopied"
+                                    aria-live="polite"
+                                    class="info success"
+                                    role="alert"
+                                    style="text-align: right"
+                                >
                                     {{ 'SETTINGS.SECRET_WAS_COPIED' | translate }}
                                 </div>
-                            </div>
+                            </fieldset>
 
-                            <div class="form__field">
-                                <label
-                                    for="field-port">{{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL3' | translate }}</label>
+                            <fieldset class="form__field">
+                                <label for="field-port">{{ 'SETTINGS.FORM.PDC_COMPANION.LABELS.LABEL3' | translate }}</label>
                                 <input
                                     (contextmenu)="
                                         variablesService.onContextMenuOnlyCopy($event, this.variablesService.rpc_port?.toString())
@@ -164,26 +258,29 @@
                                     id="field-port"
                                     type="text"
                                 />
-                            </div>
+                            </fieldset>
                         </div>
                     </ng-container>
                 </form>
 
-                <form (ngSubmit)="onSubmitChangePass()" [formGroup]="changeForm">
+                <form
+                    role="form"
+                    (ngSubmit)="onSubmitChangePass()"
+                    [attr.aria-busy]="isMasterPasswordSaving ? 'true' : null"
+                    [formGroup]="changeForm"
+                >
                     <h4 class="master-password-title mb-2">
-                        <ng-container *ngIf="!variablesService.appPass">
-                            {{ 'SETTINGS.MASTER_PASSWORD.TITLE1' | translate }}
-                        </ng-container>
-                        <ng-container *ngIf="variablesService.appPass">
-                            {{ 'SETTINGS.MASTER_PASSWORD.TITLE2' | translate }}
-                        </ng-container>
+                        {{
+                            (!variablesService.appPass ? 'SETTINGS.MASTER_PASSWORD.TITLE1' : 'SETTINGS.MASTER_PASSWORD.TITLE2') | translate
+                        }}
                     </h4>
 
                     <div class="form__card">
-                        <div *ngIf="variablesService.appPass" class="form__field">
+                        <fieldset *ngIf="variablesService.appPass" [disabled]="isMasterPasswordSaving" class="form__field">
                             <label for="old-password">{{ 'SETTINGS.MASTER_PASSWORD.OLD' | translate }}</label>
                             <input
                                 (contextmenu)="variablesService.onContextMenuPasteSelect($event)"
+                                [attr.aria-describedby]="'old-password-error'"
                                 [class.invalid]="
                                     changeForm.invalid &&
                                     changeForm.controls['password'].valid &&
@@ -207,21 +304,19 @@
                                     changeForm.errors['pass_mismatch'] &&
                                     changeForm.get('password').value.length > 0
                                 "
+                                aria-live="assertive"
                                 class="error"
+                                id="old-password-error"
                             >
                                 {{ 'SETTINGS.FORM_ERRORS.CURRENT_PASS_NOT_MATCH' | translate }}
                             </div>
-                            <div *ngIf="changeForm.invalid && (changeForm.controls['password'].dirty ||
-                            changeForm.controls['password'].touched) && changeForm.controls['password'].errors?.pattern"
-                                 class="error">
-                                {{ 'ERRORS.REGEXP_INVALID_PASSWORD' | translate }}
-                            </div>
-                        </div>
+                        </fieldset>
 
-                        <div class="form__field">
+                        <fieldset [disabled]="isMasterPasswordSaving" class="form__field">
                             <label for="new-password">{{ 'SETTINGS.MASTER_PASSWORD.NEW' | translate }}</label>
                             <input
                                 (contextmenu)="variablesService.onContextMenuPasteSelect($event)"
+                                [attr.aria-describedby]="'new-password-error'"
                                 [class.invalid]="changeForm.controls['new_password'].touched && changeForm.controls['new_password'].invalid"
                                 class="form__field--input"
                                 formControlName="new_password"
@@ -231,7 +326,9 @@
                             />
                             <div
                                 *ngIf="changeForm.controls['new_password'].touched && changeForm.controls['new_password'].invalid"
+                                aria-live="assertive"
                                 class="error"
+                                id="new-password-error"
                             >
                                 <div *ngIf="changeForm.controls['new_password'].errors?.pattern">
                                     {{ 'ERRORS.REGEXP_INVALID_PASSWORD' | translate }}
@@ -240,12 +337,13 @@
                                     {{ 'ERRORS.REQUIRED' | translate }}
                                 </div>
                             </div>
-                        </div>
+                        </fieldset>
 
-                        <div class="form__field">
+                        <fieldset [disabled]="isMasterPasswordSaving" class="form__field">
                             <label for="confirm-password">{{ 'SETTINGS.MASTER_PASSWORD.CONFIRM' | translate }}</label>
                             <input
                                 (contextmenu)="variablesService.onContextMenuPasteSelect($event)"
+                                [attr.aria-describedby]="'confirm-password-error'"
                                 [class.invalid]="
                                     changeForm.invalid &&
                                     (changeForm.controls['new_confirmation'].dirty || changeForm.controls['new_confirmation'].touched) &&
@@ -267,36 +365,68 @@
                                     changeForm.errors['mismatch'] &&
                                     changeForm.get('new_confirmation').value.length > 0
                                 "
+                                aria-live="assertive"
                                 class="error"
+                                id="confirm-password-error"
                             >
                                 {{ 'SETTINGS.FORM_ERRORS.CONFIRM_NOT_MATCH' | translate }}
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
 
                     <div class="submit-button-container">
-                        <button [disabled]="!changeForm.valid" class="primary big max-w-19-rem w-100" type="submit">
+                        <button
+                            [disabled]="isMasterPasswordSaving || !changeForm.valid"
+                            class="primary big max-w-19-rem w-100"
+                            type="submit"
+                        >
                             {{ 'SETTINGS.MASTER_PASSWORD.BUTTON' | translate }}
                         </button>
-                        <span *ngIf="ifSaved" [class.active]="ifSaved" class="ml-1 color-aqua">{{
-                                'SETTINGS.SETTINGS_SAVED' | translate
-                            }}</span>
+                        <span *ngIf="ifSaved" [class.active]="ifSaved" class="ml-1 color-aqua" role="alert">{{
+                            'SETTINGS.SETTINGS_SAVED' | translate
+                        }}</span>
                     </div>
+                    <p *ngIf="masterPasswordSaveError" class="error mt-1" role="alert">
+                        {{ 'ERRORS.MASTER_PASSWORD_NOT_SAVED' | translate }}
+                    </p>
                 </form>
 
-                <div class="mt-2">
-                    <p *ngIf="!isBuildVersionWasCopied">
-                        Build version: {{ currentBuild }}
-                        <button (click)="copyBuildVersion()" class="btn--copy">
-                            <mat-icon svgIcon="pdc-copy"></mat-icon>
-                        </button>
-                    </p>
+                <p *ngIf="!isBuildVersionWasCopied" class="mt-2">
+                    {{ 'COMMON.BUILD_VERSION' | translate }}: {{ variablesService.buildVersion }}
+                    <button
+                        (click)="copyBuildVersion()"
+                        [attr.aria-label]="'ACCESSIBILITY.SETTINGS.ARIA_LABEL1' | translate"
+                        class="btn--copy"
+                        type="button"
+                    >
+                        <mat-icon svgIcon="pdc-copy"></mat-icon>
+                    </button>
+                </p>
 
-                    <p *ngIf="isBuildVersionWasCopied" style="color: var(--aqua-500)">
-                        {{ 'Build version was copied' | translate }}
-                    </p>
-                </div>
-            </div>
+                <p *ngIf="isBuildVersionWasCopied" aria-live="polite" class="mt-2" role="alert" style="color: var(--aqua-500)">
+                    {{ 'COMMON.BUILD_VERSION_COPIED' | translate }}
+                </p>
+            </section>
         </div>
-    </div>
-</div>
+    </section>
+</main>
+
+<ng-template #clearLogsDialog>
+    <h3 mat-dialog-title id="clear-logs-title">{{ 'SETTINGS.LOG_FILES.CONFIRM_TITLE' | translate }}</h3>
+    <mat-dialog-content>
+        <p id="clear-logs-description">
+            {{
+                (logFilesSize === null ? 'SETTINGS.LOG_FILES.CONFIRM_MESSAGE_UNKNOWN_SIZE' : 'SETTINGS.LOG_FILES.CONFIRM_MESSAGE')
+                    | translate : { size: formattedLogFilesSize }
+            }}
+        </p>
+    </mat-dialog-content>
+    <mat-dialog-actions class="log-files-dialog-actions">
+        <button id="clear-logs-cancel" [mat-dialog-close]="false" class="outline big" type="button">
+            {{ 'MODALS.CANCEL' | translate }}
+        </button>
+        <button [mat-dialog-close]="true" class="outline big log-files-clear-confirm" type="button">
+            {{ 'SETTINGS.LOG_FILES.CONFIRM_CLEAR' | translate }}
+        </button>
+    </mat-dialog-actions>
+</ng-template>

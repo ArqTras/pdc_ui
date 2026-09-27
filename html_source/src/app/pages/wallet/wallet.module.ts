@@ -4,21 +4,21 @@ import { WalletRoutingModule } from './wallet-routing.module';
 import { AssetsComponent } from './tabs/assets/assets.component';
 import { WalletComponent } from './wallet/wallet.component';
 import { FlexLayoutModule, FlexModule } from '@angular/flex-layout';
-import { TooltipModule } from '@parts/directives/tooltip/tooltip.module';
 import {
     ContractStatusMessagesPipeModule,
     HistoryTypeMessagesPipeModule,
     IntToMoneyPipeModule,
-    IsAvailableAliasNamePipeModule,
+    IsAvailableAliasNamePipe,
     ShortStringPipe,
+    ExtractErrorCodePipe,
 } from '@parts/pipes';
 import { TranslateModule } from '@ngx-translate/core';
 import { ConfirmModalModule } from '@parts/modals/confirm-modal/confirm-modal.module';
-import { ExportHistoryModalModule } from './wallet/modals/export-history-modal/export-history-modal.module';
+import { ExportHistoryModalModule } from './wallet/dialogs/export-history-modal/export-history-modal.module';
 import { WalletDetailsComponent } from '../wallet-details/wallet-details.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OverlayModule } from '@angular/cdk/overlay';
-import { DefaultImgModule, InputValidateModule, LowerCaseDirective } from '@parts/directives';
+import { DefaultImgModule, InputValidateModule, LowerCaseDirective, TooltipDirective } from '@parts/directives';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { HistoryComponent } from './tabs/history/history.component';
 import { StakingComponent } from './tabs/staking/staking.component';
@@ -34,10 +34,11 @@ import { StakingSwitchComponent } from '@parts/components/staking-switch.compone
 import { SwitchComponent } from '@parts/components/switch.component';
 import { BreadcrumbsComponent } from '@parts/components/breadcrumbs/breadcrumbs.component';
 import { BackButtonComponent } from '@parts/components/back-button/back-button.component';
+import { StakingTimeToBlockCardComponent } from '@parts/components/staking-time-to-block-card/staking-time-to-block-card.component';
 import { WalletModalsModule } from './tabs/send/modals/wallet-modals.module';
 import { GetAssetInfoPipe } from '@parts/pipes/get-asset-info.pipe';
-import { MigrateWalletToZarcanumComponent } from './wallet/modals/migrate-wallet-to-zarcanum/migrate-wallet-to-zarcanum.component';
-import { SuccessSweepBareOutsComponent } from './wallet/modals/success-sweep-bare-outs/success-sweep-bare-outs.component';
+import { MigrateWalletToZarcanumComponent } from './wallet/dialogs/migrate-wallet-to-zarcanum/migrate-wallet-to-zarcanum.component';
+import { SuccessSweepBareOutsComponent } from './wallet/dialogs/success-sweep-bare-outs/success-sweep-bare-outs.component';
 import { GetAmountItemsPipe } from '@parts/pipes/get-amount-items.pipe';
 import { TransactionStatusComponent } from '@parts/components/transaction-status/transaction-status.component';
 import { IsVisibleFeePipe } from '@parts/pipes/is-visible-fee.pipe';
@@ -48,7 +49,6 @@ import { UpdateCustomAssetComponent } from './tabs/custom-assets/modals/update-c
 import { EmitCustomAssetComponent } from './tabs/custom-assets/modals/emit-custom-asset/emit-custom-asset.component';
 import { BurnCustomAssetComponent } from './tabs/custom-assets/modals/burn-custom-asset/burn-custom-asset.component';
 import { TransactionDetailsForCustomAssetsComponent } from './tabs/custom-assets/modals/transaction-details-for-custom-assets/transaction-details-for-custom-assets.component';
-import { TransactionDetailsComponent } from '@parts/components/transaction-details.component';
 import { VisibilityBalanceDirective } from '@parts/directives/visibility-balance.directive';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { LoaderComponent } from '@parts/components/loader.component';
@@ -58,11 +58,25 @@ import { AssetDetailsComponent } from '@parts/modals/asset-details/asset-details
 import { MatDialogModule } from '@angular/material/dialog';
 import { GetLogoByAssetInfoPipe } from '@parts/pipes/get-logo-by-asset-info.pipe';
 import { ShieldTestnetComponent } from '@parts/components/shield-testnet/shield-testnet.component';
-import {
-    VisibilityBalanceButtonComponent
-} from '@parts/components/visibility-balance-button/visibility-balance-button.component';
+import { VisibilityBalanceButtonComponent } from '@parts/components/visibility-balance-button/visibility-balance-button.component';
 import { MigrateAlertComponent } from '@parts/components/migrate-alert/migrate-alert.component';
 import { AliasControlsComponent } from '@parts/components/alias-controls/alias-controls.component';
+import { IsVisibleControlErrorPipe } from '@parts/pipes/is-visible-control-error.pipe';
+import { WrapInformationComponent } from './tabs/send/components/wrap-information/wrap-information.component';
+import { FeeFieldComponent } from './tabs/send/components/fee-field/fee-field.component';
+import { MixinFieldComponent } from './tabs/send/components/mixin-field/mixin-field.component';
+import { AssetFieldComponent } from './tabs/send/components/asset-field/asset-field.component';
+import { CommentFieldComponent } from './tabs/send/components/comment-field/comment-field.component';
+import { AddressFieldComponent } from './tabs/send/components/address-field/address-field.component';
+import { AmountFieldComponent } from './tabs/send/components/amount-field/amount-field.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { AutoFocusDirective } from '@parts/directives/autofocus.directive';
+import { CellAssetBalanceComponent } from '@parts/components/cell-asset-balance/cell-asset-balance.component';
+import { CellAddressComponent } from '@parts/components/cell-address/cell-address.component';
+import { AdditionalDetailsComponent } from './tabs/send/components/additional-details/additional-details.component';
+import { DestinationsComponent } from './tabs/send/components/destinations/destinations.component';
+import { TransactionDetailsComponent } from '@parts/components/transaction-details/transaction-details.component';
 
 @NgModule({
     declarations: [
@@ -88,10 +102,11 @@ import { AliasControlsComponent } from '@parts/components/alias-controls/alias-c
         CommonModule,
         WalletRoutingModule,
         FlexModule,
-        TooltipModule,
+        TooltipDirective,
         ShortStringPipe,
+        ExtractErrorCodePipe,
         TranslateModule,
-        IsAvailableAliasNamePipeModule,
+        IsAvailableAliasNamePipe,
         ConfirmModalModule,
         ExportHistoryModalModule,
         ReactiveFormsModule,
@@ -115,6 +130,7 @@ import { AliasControlsComponent } from '@parts/components/alias-controls/alias-c
         LowerCaseDirective,
         BreadcrumbsComponent,
         BackButtonComponent,
+        StakingTimeToBlockCardComponent,
         WalletModalsModule,
         GetAssetInfoPipe,
         GetAmountItemsPipe,
@@ -132,6 +148,21 @@ import { AliasControlsComponent } from '@parts/components/alias-controls/alias-c
         VisibilityBalanceButtonComponent,
         MigrateAlertComponent,
         AliasControlsComponent,
+        IsVisibleControlErrorPipe,
+        WrapInformationComponent,
+        FeeFieldComponent,
+        MixinFieldComponent,
+        AssetFieldComponent,
+        CommentFieldComponent,
+        AddressFieldComponent,
+        AmountFieldComponent,
+        MatTooltipModule,
+        MatMenuModule,
+        AutoFocusDirective,
+        CellAssetBalanceComponent,
+        CellAddressComponent,
+        AdditionalDetailsComponent,
+        DestinationsComponent,
     ],
 })
 export class WalletModule {}

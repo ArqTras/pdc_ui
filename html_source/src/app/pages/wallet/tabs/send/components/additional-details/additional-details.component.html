@@ -1,0 +1,12 @@
+<div class="additional-details">
+    <!-- Header -->
+    <button (click)="toggle()" [class.border-radius-all]="!show" class="additional-header" type="button">
+        <span>{{ 'SEND.DETAILS' | translate }}</span>
+        <mat-icon [ngClass]="{ 'rotate-180': show }" class="ml-1" svgIcon="pdc-dropdown-arrow-down"></mat-icon>
+    </button>
+
+    <!-- Content -->
+    <div *ngIf="show" class="additional-content">
+        <pdc-fee-field [controlRef]="formRef.controls.fee"></pdc-fee-field>
+    </div>
+</div>

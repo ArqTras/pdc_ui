@@ -48,7 +48,7 @@ export class EmitCustomAssetComponent {
 
     public submit(): void {
         const {
-            currentWallet: { wallet_id, address },
+            current_wallet: { wallet_id, address },
         } = this.variablesService;
         const {
             asset_info: { asset_id, decimal_point },
@@ -74,7 +74,7 @@ export class EmitCustomAssetComponent {
                 method: 'emit_asset',
                 params,
             },
-            async (job_id: number): Promise<void> => {
+            (job_id: number) => {
                 this._ngZone.run(() => {
                     this.matDialogRef.close(job_id);
                 });

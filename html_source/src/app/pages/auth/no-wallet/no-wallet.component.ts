@@ -11,11 +11,11 @@ import { TranslateService } from '@ngx-translate/core';
     styleUrls: ['./no-wallet.component.scss'],
 })
 export class NoWalletComponent {
-    get pdcLogo(): string {
+    get zanoLogo(): string {
         const {
             settings: { isDarkTheme },
         } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.png' : 'assets/icons/blue/light-pdc-logo.png';
+        return isDarkTheme ? 'assets/icons/blue/pdc-logo.svg' : 'assets/icons/blue/light-pdc-logo.svg';
     }
 
     constructor(
@@ -48,7 +48,9 @@ export class NoWalletComponent {
         );
     }
 
-    openInBrowser(): void {
+    openInBrowser(event: Event): void {
+        event.preventDefault();
+        event.stopPropagation();
         this.backend.openUrlInBrowser(CREATE_NEW_WALLET_HELP_PAGE);
     }
 }

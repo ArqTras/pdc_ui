@@ -12,7 +12,7 @@ export const wrongPassword: PdcValidationErrors = {
     errorText: 'Incorrect password',
 };
 
-export const insuficcientFunds: PdcValidationErrors = {
+export const insufficientFunds: PdcValidationErrors = {
     errorText: 'ERRORS.INSUFFICIENT_FUNDS',
 };
 

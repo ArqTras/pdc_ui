@@ -11,6 +11,6 @@ export class IsVisibleControlErrorPipe implements PipeTransform {
         if (!control) {
             return false;
         }
-        return control.invalid && (control.dirty || control.touched);
+        return (control.touched || control.dirty) && control.invalid;
     }
 }

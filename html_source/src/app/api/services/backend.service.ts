@@ -3,20 +3,25 @@ import { Observable, Subject } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { VariablesService } from '@parts/services/variables.service';
 import { ModalService } from '@parts/services/modal.service';
+import { extractErrorCode } from '@parts/utils/extract-error-code';
 import { MoneyToIntPipe } from '@parts/pipes/money-to-int-pipe/money-to-int.pipe';
+
 import JSONBigNumber from 'json-bignumber';
 import { BigNumber } from 'bignumber.js';
-import { ResponseGetWalletInfo } from '../models/wallet.model';
 import {
     AssetInfo,
+    AssetsWhitelistGetResponseData,
     ParamsAddCustomAssetId,
     ParamsRemoveCustomAssetId,
     ResponseAddCustomAssetId,
     ResponseRemoveCustomAssetId,
 } from '@api/models/assets.model';
-import { Alias } from '@api/models/alias.model';
-import { SendMoneyParams } from '@api/models/send-money.model';
-import { ParamsCallRpc } from '@api/models/call_rpc.model';
+import { AliasInfo, AliasLookupCallback, AliasLookupParams } from '@api/models/alias.model';
+import { TransferParams } from '@api/models/transfer.model';
+import { ParamsCallRpc, ResponseCallRpc } from '@api/models/call_rpc.model';
+import { ResponseGetAssetInfo, ResultSplitIntegratedAddress, ResponseStoreWallet } from '@api/models/rpc.models';
+import { WalletInfo } from '@api/models/wallet-info.model';
+import { LogFilesResponse, LogFilesSizeResponse } from '@api/models/log-files.model';
 
 export interface PramsObj {
     [key: string]: any;
@@ -49,7 +54,7 @@ export const convertersObjectForTypes: ConvertersObjectForTypes = {
     [ParamsType.string]: (value: string): string => value,
     [ParamsType.object]: (value: PramsObj): string => JSONBigNumber.stringify(value),
     [ParamsType.array]: (value: PramsArray): string[] =>
-        value.map(v => {
+        value.map((v) => {
             return typeof v === ParamsType.string ? (v as string) : JSONBigNumber.stringify(v);
         }),
 };
@@ -92,6 +97,7 @@ export interface CurrentActionState {
 }
 
 export enum Commands {
+    print_log = 'print_log',
     money_transfer_cancel = 'money_transfer_cancel',
     handle_deeplink_click = 'handle_deeplink_click',
     money_transfer = 'money_transfer',
@@ -110,6 +116,8 @@ export enum Commands {
     async_call = 'async_call',
     async_call_2a = 'async_call_2a',
     set_log_level = 'set_log_level',
+    get_log_files_size = 'get_log_files_size',
+    clear_log_files = 'clear_log_files',
     get_network_type = 'get_network_type',
     get_version = 'get_version',
     get_tx_pool_info = 'get_tx_pool_info',
@@ -168,6 +176,7 @@ export enum Commands {
     call_wallet_rpc = 'call_wallet_rpc',
     setup_jwt_wallet_rpc = 'setup_jwt_wallet_rpc',
     show_notification = 'show_notification',
+    is_remnotenode_mode_preconfigured = 'is_remnotenode_mode_preconfigured',
 }
 
 @Injectable({
@@ -241,17 +250,17 @@ export class BackendService {
         if (command === Commands.on_core_event) {
             this.backendObject[command].connect(callback);
         } else {
-            this.backendObject[command].connect(str => {
+            this.backendObject[command].connect((str) => {
                 callback(JSONBigNumber.parse(str, BackendService.bigNumberParser));
             });
         }
     }
 
     initService(): Observable<string> {
-        return new Observable(observer => {
+        return new Observable((observer) => {
             if (!this.backendLoaded) {
                 this.backendLoaded = true;
-                (<any>window).QWebChannel((<any>window).qt.webChannelTransport, channel => {
+                (<any>window).QWebChannel((<any>window).qt.webChannelTransport, (channel) => {
                     this.backendObject = channel.objects.mediator_object;
                     observer.next('backendObject loaded');
                 });
@@ -272,19 +281,28 @@ export class BackendService {
         this.runCommand(Commands.on_request_quit);
     }
 
-    getAppData(callback): void {
+    getAppData(callback?: any): void {
         this.runCommand(Commands.get_app_data, {}, callback);
     }
 
-    storeAppData(callback?): void {
-        if (this.variablesService.wallets.length > 0) {
+    storeAppData(callback?: any): void {
+        const { wallets } = this.variablesService;
+        if (wallets.length > 0) {
             this.variablesService.settings.wallets = [];
-            this.variablesService.wallets.forEach(wallet => {
+            wallets.forEach((wallet) => {
                 this.variablesService.settings.wallets.push({
                     name: wallet.name,
                     path: wallet.path,
+                    settings: wallet.settings,
                 });
             });
+
+            this.variablesService.settings.localBlacklistsOfVerifiedAssetsByWallets = wallets.reduce(
+                (acc, { address, localBlacklistVerifiedAssets$: { value: localBlacklistVerifiedAssets } }) => {
+                    return { ...acc, [address]: localBlacklistVerifiedAssets };
+                },
+                {}
+            );
         }
         this.runCommand(Commands.store_app_data, this.variablesService.settings, callback);
     }
@@ -313,7 +331,7 @@ export class BackendService {
     storeSecureAppData(callback?): void {
         const wallets = [];
         const contacts = [];
-        this.variablesService.wallets.forEach(wallet => {
+        this.variablesService.wallets.forEach((wallet) => {
             wallets.push({
                 name: wallet.name,
                 pass: wallet.pass,
@@ -321,7 +339,7 @@ export class BackendService {
                 staking: wallet.staking,
             });
         });
-        this.variablesService.contacts.forEach(contact => {
+        this.variablesService.contacts.forEach((contact) => {
             contacts.push({
                 name: contact.name,
                 address: contact.address,
@@ -329,13 +347,30 @@ export class BackendService {
             });
         });
         const data = { wallets: wallets, contacts: contacts };
-        this.backendObject[Commands.store_secure_app_data](JSON.stringify(data), this.variablesService.appPass, dataStore => {
+        this.backendObject[Commands.store_secure_app_data](JSON.stringify(data), this.variablesService.appPass, (dataStore) => {
             this.backendCallback(dataStore, {}, callback, Commands.store_secure_app_data);
         });
     }
 
+    printLog(msgOrObj: string | object): void {
+        let msg: string;
+
+        if (typeof msgOrObj === 'string') {
+            msg = msgOrObj;
+        } else {
+            try {
+                msg = JSON.stringify(msgOrObj);
+            } catch (e) {
+                msg = 'Error stringifying log object';
+                console.error(e);
+            }
+        }
+
+        this.runCommand(Commands.print_log, { msg, log_level: this.variablesService.settings.appLog ?? 0 });
+    }
+
     dropSecureAppData(callback?): void {
-        this.backendObject[Commands.drop_secure_app_data]('', dataStore => {
+        this.backendObject[Commands.drop_secure_app_data]('', (dataStore) => {
             this.backendCallback(dataStore, {}, callback, Commands.drop_secure_app_data);
         });
     }
@@ -370,10 +405,6 @@ export class BackendService {
 
     loadFile(path, callback): void {
         this.runCommand(Commands.load_from_file, path, callback);
-    }
-
-    push_offer(params, callback): void {
-        this.runCommand(Commands.push_offer, params, callback);
     }
 
     generateWallet(path, pass, callback): void {
@@ -428,33 +459,19 @@ export class BackendService {
         this.runCommand(Commands.restore_wallet, params, callback);
     }
 
-    sendMoney({ wallet_id, address, amount, fee, mixin, comment, hide_receiver, push_payer, asset_id }: SendMoneyParams, callback): void {
-        const params = {
-            wallet_id,
-            destinations: [
-                {
-                    address,
-                    amount,
-                    ...(asset_id && { asset_id }),
-                },
-            ],
-            mixin_count: mixin ?? 0,
-            lock_time: 0,
-            fee: this.moneyToIntPipe.transform(fee),
-            comment: comment,
-            push_payer,
-            hide_receiver
-        };
-
+    sendMoney(params: TransferParams, callback: (job_id: number) => void): void {
         this.asyncCall(Commands.transfer, params, callback);
     }
 
-    setupJwtWalletRpc(value: { pdcCompation: boolean; secret: string }): void {
+    setupJwtWalletRpc(value: { zanoCompation: boolean; secret: string }, callback?: () => void): void {
         const { secret } = value;
 
         this.runCommand(Commands.setup_jwt_wallet_rpc, secret, () => {
-            this.variablesService.settings.pdcCompanionForm = value;
+            this.variablesService.settings.zanoCompanionForm = value;
             this.storeAppData();
+            if (callback) {
+                callback();
+            }
         });
     }
 
@@ -554,7 +571,7 @@ export class BackendService {
         this.runCommand(Commands.open_url_in_browser, url, callback);
     }
 
-    start_backend(node, host, port, callback): void {
+    start_backend(node, host, port, callback: (...args: unknown[]) => void = (): void => undefined): void {
         const params = {
             configure_for_remote_node: node,
             remote_node_host: host,
@@ -567,10 +584,10 @@ export class BackendService {
         this.runCommand(Commands.get_default_fee, {}, callback);
     }
 
-    setBackendLocalization(stringsArray, title, callback?): void {
+    setBackendLocalization(strings: string[], language_title: string, callback?): void {
         const params = {
-            strings: stringsArray,
-            language_title: title,
+            strings,
+            language_title,
         };
         this.runCommand(Commands.set_localization_strings, params, callback);
     }
@@ -590,11 +607,11 @@ export class BackendService {
         this.runCommand(Commands.request_alias_registration, params, callback);
     }
 
-    updateAlias(wallet_id, alias, fee, callback): void {
+    updateAlias(wallet_id, alias: AliasInfo, fee, callback): void {
         const params = {
             wallet_id: wallet_id,
             alias: {
-                alias: alias.name.replace('@', ''),
+                alias: alias.alias.replace('@', ''),
                 address: alias.address,
                 tracking_key: '',
                 comment: alias.comment,
@@ -604,15 +621,11 @@ export class BackendService {
         this.runCommand(Commands.request_alias_update, params, callback);
     }
 
-    getAllAliases(callback): void {
-        this.runCommand(Commands.get_all_aliases, {}, callback);
-    }
-
     getAliasInfoByName(value, callback): void {
         this.runCommand(Commands.get_alias_info_by_name, value, callback);
     }
 
-    getAliasByAddress(value, callback): void {
+    getAliasInfoByAddress(value, callback): void {
         this.runCommand(Commands.get_alias_info_by_address, value, callback);
     }
 
@@ -622,49 +635,6 @@ export class BackendService {
 
     resyncWallet(id): void {
         this.runCommand(Commands.resync_wallet, { wallet_id: id });
-    }
-
-    getWalletAlias(address): Partial<Alias> {
-        if (address !== null && this.variablesService.daemon_state === 2) {
-            if (this.variablesService.aliasesChecked[address] == null) {
-                this.variablesService.aliasesChecked[address] = {};
-                if (this.variablesService.aliases.length) {
-                    for (let i = 0, length = this.variablesService.aliases.length; i < length; i++) {
-                        if (i in this.variablesService.aliases && this.variablesService.aliases[i]['address'] === address) {
-                            this.variablesService.aliasesChecked[address]['name'] = this.variablesService.aliases[i].name;
-                            this.variablesService.aliasesChecked[address]['address'] = this.variablesService.aliases[i].address;
-                            this.variablesService.aliasesChecked[address]['comment'] = this.variablesService.aliases[i].comment;
-                            return this.variablesService.aliasesChecked[address];
-                        }
-                    }
-                }
-                this.getAliasByAddress(address, (status, data) => {
-                    if (status) {
-                        this.variablesService.aliasesChecked[data.address]['name'] = '@' + data.alias;
-                        this.variablesService.aliasesChecked[data.address]['address'] = data.address;
-                        this.variablesService.aliasesChecked[data.address]['comment'] = data.comment;
-                    }
-                });
-            }
-            return this.variablesService.aliasesChecked[address];
-        }
-        return {};
-    }
-
-    getContactAlias(): void {
-        if (this.variablesService.contacts.length > 0 && this.variablesService.daemon_state === 2) {
-            this.variablesService.contacts.map(contact => {
-                this.getAliasByAddress(contact.address, (status, data) => {
-                    if (status) {
-                        if (data.alias) {
-                            contact.alias = '@' + data.alias;
-                        }
-                    } else {
-                        contact.alias = null;
-                    }
-                });
-            });
-        }
     }
 
     getRecentTransfers(id, offset, count, exclude_mining_txs, callback): void {
@@ -689,8 +659,62 @@ export class BackendService {
         });
     }
 
+    isRemnoteNodeModePreconfigured(callback): void {
+        this.runCommand(Commands.is_remnotenode_mode_preconfigured, {}, callback);
+    }
+
     setLogLevel(level): void {
         this.runCommand(Commands.set_log_level, { v: level });
+    }
+
+    getLogFilesSize(): Observable<LogFilesSizeResponse> {
+        return this.runLogFilesCommand<LogFilesSizeResponse>(Commands.get_log_files_size);
+    }
+
+    clearLogFiles(): Observable<LogFilesResponse> {
+        return this.runLogFilesCommand<LogFilesResponse>(Commands.clear_log_files);
+    }
+
+    private runLogFilesCommand<T extends LogFilesResponse>(
+        command: Commands.get_log_files_size | Commands.clear_log_files
+    ): Observable<T> {
+        return new Observable<T>((observer) => {
+            if (!this.backendObject?.[Commands.async_call] || !this.backendObject?.[command]) {
+                observer.error(new Error('Log files API is unavailable'));
+                return;
+            }
+
+            let jobId: number | undefined;
+            // A fast worker can finish before WebChannel returns its job ID.
+            const earlyResults = new Map<number, T>();
+            const subscription = this.dispatchAsyncCallResult$.subscribe(({ job_id, response }: AsyncCommandResults<T>) => {
+                if (jobId === undefined) {
+                    earlyResults.set(job_id, response);
+                } else if (job_id === jobId) {
+                    observer.next(response);
+                    observer.complete();
+                }
+            });
+
+            this.asyncCall(command, {}, (returnedJobId) => {
+                if (observer.closed) {
+                    return;
+                }
+                if (!Number.isSafeInteger(returnedJobId)) {
+                    observer.error(new Error('Could not start log files operation'));
+                    return;
+                }
+
+                jobId = returnedJobId;
+                if (earlyResults.has(jobId)) {
+                    observer.next(earlyResults.get(jobId));
+                    observer.complete();
+                }
+                earlyResults.clear();
+            });
+
+            return () => subscription.unsubscribe();
+        });
     }
 
     asyncCall(command: string, params: PramsObj, callback?: (job_id?: number) => void | any): void {
@@ -756,7 +780,11 @@ export class BackendService {
                     disable_price_fetch,
                     use_debug_mode,
                     rpc_port,
-                }: { disable_price_fetch: boolean; use_debug_mode: boolean; rpc_port: number }
+                }: {
+                    disable_price_fetch: boolean;
+                    use_debug_mode: boolean;
+                    rpc_port: number;
+                }
             ) => {
                 this.variablesService.disable_price_fetch$.next(disable_price_fetch);
                 this.variablesService.use_debug_mode$.next(use_debug_mode);
@@ -789,13 +817,89 @@ export class BackendService {
         this.runCommand(Commands.remove_custom_asset_id, params, callback);
     }
 
-    getWalletInfo(wallet_id, callback?: (status: boolean, response_data: ResponseGetWalletInfo) => void): void {
+    getWalletInfo(wallet_id, callback?: (status: boolean, response_data: WalletInfo) => void): void {
         this.runCommand(Commands.get_wallet_info, { wallet_id }, callback);
+    }
+
+    alias_lookup(params: AliasLookupParams, callback: AliasLookupCallback): void {
+        this.call_rpc(
+            {
+                id: 0,
+                jsonrpc: '2.0',
+                method: 'alias_lookup',
+                params,
+            },
+            callback
+        );
+    }
+
+    splitIntegratedAddress(
+        wallet_id: number,
+        address: string,
+        callback?: (status: boolean, response_data: ResponseCallRpc<ResultSplitIntegratedAddress>) => void
+    ): void {
+        const params: ParamsCallRpc = {
+            jsonrpc: '2.0',
+            id: 0,
+            method: 'split_integrated_address',
+            params: {
+                integrated_address: address,
+            },
+        };
+        this.call_wallet_rpc([wallet_id, params], callback);
+    }
+
+    storeWallet(wallet_id: number, callback?: (status: boolean, response_data: ResponseCallRpc<ResponseStoreWallet>) => void): void {
+        const params: ParamsCallRpc = {
+            jsonrpc: '2.0',
+            id: 0,
+            method: 'store',
+            params: {},
+        };
+        this.call_wallet_rpc([wallet_id, params], callback);
     }
 
     // Use for call rpc-api https://docs.pdc.org/docs/build/rpc-api
     call_rpc(params: Partial<ParamsCallRpc>, callback?: (status: boolean, response_data: any) => void): void {
         this.runCommand(Commands.call_rpc, params, callback);
+    }
+
+    getAssetInfo(asset_id: string): Observable<ResponseGetAssetInfo> {
+        const params: Partial<ParamsCallRpc> = {
+            id: 0,
+            jsonrpc: '2.0',
+            method: 'get_asset_info',
+            params: {
+                asset_id,
+            },
+        };
+
+        return new Observable((observer) => {
+            this.call_rpc(params, (status, response: ResponseGetAssetInfo) => {
+                this.ngZone.run(() => {
+                    observer.next(response);
+                    observer.complete();
+                });
+            });
+        });
+    }
+
+    getAssetsWhitelist(wallet_id: number): Observable<AssetsWhitelistGetResponseData> {
+        const params: ParamsCallRpc = {
+            jsonrpc: '2.0',
+            id: 0,
+            method: 'assets_whitelist_get',
+            params: {},
+        };
+
+        return new Observable((observer) => {
+            this.call_wallet_rpc([wallet_id, params], (status, response_data: AssetsWhitelistGetResponseData) => {
+                this.ngZone.run(() => {
+                    observer.next(response_data);
+                    observer.complete();
+                });
+            });
+        });
     }
 
     call_wallet_rpc(
@@ -807,7 +911,8 @@ export class BackendService {
 
     private informerRun(error: string, params, command: string): void {
         let error_translate = '';
-        switch (error) {
+        const errorCode = extractErrorCode(error);
+        switch (errorCode) {
             case 'NOT_ENOUGH_MONEY':
                 error_translate = 'ERRORS.NOT_ENOUGH_MONEY';
                 // error_translate = 'ERRORS.NO_MONEY'; maybe that one?
@@ -981,7 +1086,7 @@ export class BackendService {
                     if (command !== Commands.get_recent_transfers) {
                         this.runCommand(command, params, callback);
                     } else {
-                        const current_wallet_id = this.variablesService.currentWallet.wallet_id;
+                        const current_wallet_id = this.variablesService.current_wallet.wallet_id;
                         if (current_wallet_id === params.wallet_id) {
                             this.runCommand(command, params, callback);
                         }
@@ -1022,7 +1127,7 @@ export class BackendService {
         params = params && convertorParams(params);
 
         if (type === ParamsType.array) {
-            Action(...(params as string[]), resultStr => {
+            Action(...(params as string[]), (resultStr) => {
                 this.commandDebug(command, params, resultStr);
                 return this.backendCallback(resultStr, params, callback, command);
             });
@@ -1032,7 +1137,7 @@ export class BackendService {
         if (command === Commands.get_recent_transfers) {
             this.variablesService.get_recent_transfers = false;
         }
-        Action(params, resultStr => {
+        Action(params, (resultStr) => {
             this.commandDebug(command, params, resultStr);
             return this.backendCallback(resultStr, params, callback, command);
         });

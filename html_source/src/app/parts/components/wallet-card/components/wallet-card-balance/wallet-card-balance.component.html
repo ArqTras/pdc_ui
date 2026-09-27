@@ -1,0 +1,24 @@
+<ng-container *appVisibilityBalance>
+    <div *appDisablePriceFetch class="wallet-card-balance-wrapper">
+        <div *ngIf="wallet.getBalanceByTicker('PDC')" class="text-ellipsis overflow-hidden">
+            <div
+                [delay]="250"
+                [placement]="'bottom'"
+                [timeDelay]="2500"
+                [tooltipClass]="'balance-tooltip'"
+                [tooltip]="tooltip$ | async"
+                class="price"
+                tabindex="0"
+            >
+                <ng-container *ngIf="totalBalance$ | async as totalBalance">
+                    <div class="text-ellipsis overflow-hidden">{{ totalBalance.value }}</div>
+                    <span class="currency ml-0_5">{{ totalBalance.currency }}</span>
+                </ng-container>
+            </div>
+        </div>
+
+        <button (click)="changeBalanceDisplayMode($event)" class="wallet-card-balance-swap" type="button">
+            <mat-icon [svgIcon]="'pdc-swap-2'"></mat-icon>
+        </button>
+    </div>
+</ng-container>

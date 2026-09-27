@@ -1,0 +1,31 @@
+<router-outlet
+    *ngIf="allowedDaemonStates.includes(variablesService.daemon_state) && !(pdcLoadersService.getState('fullScreen') | async)"
+></router-outlet>
+
+<!-- Sync / Error / Complete States -->
+<section
+    *ngIf="loadingDaemonStates.includes(variablesService.daemon_state)"
+    aria-busy="true"
+    aria-live="polite"
+    class="preloader"
+    role="status"
+>
+    <p class="mb-2">
+        {{ loadingMessageKey | translate }}
+    </p>
+    <div aria-hidden="true" class="loading-bar"></div>
+</section>
+
+<!-- Full Screen Loader -->
+<section *ngIf="pdcLoadersService.getState('fullScreen') | async" aria-busy="true" aria-live="polite" class="preloader" role="status">
+    <p class="mb-2">
+        {{ pdcLoadersService.getMessage('fullScreen') | async | translate }}
+    </p>
+    <div aria-hidden="true" class="loading-bar"></div>
+</section>
+
+<!-- Register Context Templates -->
+<app-register-context-templates></app-register-context-templates>
+
+<!-- Open Wallet Modal -->
+<app-open-wallet-modal *ngIf="needOpenWallets.length" [wallets]="needOpenWallets"></app-open-wallet-modal>

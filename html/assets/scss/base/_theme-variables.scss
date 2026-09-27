@@ -1,3 +1,7 @@
+:root {
+    --border-radius: 0.8rem;
+}
+
 .light {
     --main-background: #f0f6fb;
     --page-content-background: #fcfcfc;
@@ -13,6 +17,13 @@
     --synchronization-progress-bar-container-background: rgba(0, 0, 0, 0.1);
     --dialog-background: #ffffff;
     --block-sync: #505274;
+    --control-alias-wallet-background: #1f8feb1a;
+    --control-alias-wallet-text: var(--main-text);
+    --count-text: #1f8feb;
+
+    // sidebar
+    --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(252, 252, 252, 0) 0%, #fcfcfc 100%);
+    --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, #fcfcfc 100%);
 
     // auth
     --auth-card-background: #fcfcfc;
@@ -41,7 +52,7 @@
 
     // field amount
     --amount-ticker-text: #0c0c3a99;
-    --amount-btn-revers-background: #1f8feb1a;
+    --amount-btn-revers-background: #1f8feb33;
 
     // checkbox
     --checkbox-border: 1px solid #1f8feb66;
@@ -55,17 +66,13 @@
     --switch-circle-background: var(--white-500);
 
     //wallet
-    --wallet-background: #1f8feb26;
-    --wallet-active-background: var(--gradietAquaToBlue);
+    --wallet-background: #dbebf9;
+    --wallet-active-background: var(--gradientAquaToBlue);
     --wallet-border: 1px solid #1f8feb00;
     --wallet-border-color-hover: #1f8feb;
-    --wallet-auditable-watch-only-background: radial-gradient(
-        100% 246.57% at 0% 0%,
-        rgba(163, 102, 255, 0.75) 0%,
-        rgba(96, 31, 255, 0.75) 100%
-    );
-    --wallet-auditable-active-background: var(--gradietAmethystToPurpurle);
-    --wallet-watch-only-active-background: var(--gradietAmethystToPurpurle);
+    --wallet-auditable-watch-only-background: radial-gradient(100% 246.57% at 0% 0%, #af80fe 0%, #8756fe 100%);
+    --wallet-auditable-active-background: var(--gradientAmethystToPurpurle);
+    --wallet-watch-only-active-background: var(--gradientAmethystToPurpurle);
     --wallet-watch-only-after-background: #dbecf9;
     --wallet-watch-only-text: var(--blue-900);
     --wallet-active-text: #ffffff;
@@ -74,9 +81,11 @@
     // table
     --table-thead-bg: #1f8feb4d;
     --table-row-bg: #dbecf9;
-    --table-rounded-corners-border: 1px solid #d9dfe8;
+    --table-info-border-color: #d9dfe8;
 
-    --table-info-border: 1px solid #d9dfe8;
+    --table-rounded-corners-border: 1px solid var(--table-info-border-color);
+
+    --table-info-border: 1px solid var(--table-info-border-color);
     --table-info-label-background: #f0f6fb;
 
     // buttons
@@ -109,6 +118,13 @@
     --synchronization-progress-bar-container-background: var(--gray-900);
     --dialog-background: var(--blue-700);
     --block-sync: #a8abb5;
+    --control-alias-wallet-background: #ffffff1a;
+    --control-alias-wallet-text: var(--main-text);
+    --count-text: #1f8feb;
+
+    // sidebar
+    --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(15, 32, 85, 0) 0%, #0f2055 100%);
+    --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(15, 32, 85, 0) 0%, #0f2055 100%);
 
     // auth
     --auth-card-background: var(--blue-700);
@@ -137,7 +153,7 @@
 
     // field amount
     --amount-ticker-text: #ffffff60;
-    --amount-btn-revers-background: #ffffff1a;
+    --amount-btn-revers-background: #1f8feb33;
 
     // checkbox
     --checkbox-border: 1px solid #ffffff33;
@@ -152,12 +168,12 @@
 
     //wallet
     --wallet-background: var(--blue-500);
-    --wallet-active-background: var(--gradietAquaToBlue);
+    --wallet-active-background: var(--gradientAquaToBlue);
     --wallet-border: 1px solid var(--blue-500);
     --wallet-border-color-hover: var(--gray-800);
-    --wallet-auditable-watch-only-background: var(--gradietLightAmethystToPurpurle);
-    --wallet-auditable-active-background: var(--gradietAmethystToPurpurle);
-    --wallet-watch-only-active-background: var(--gradietAmethystToPurpurle);
+    --wallet-auditable-watch-only-background: var(--gradientLightAmethystToPurpurle);
+    --wallet-auditable-active-background: var(--gradientAmethystToPurpurle);
+    --wallet-watch-only-active-background: var(--gradientAmethystToPurpurle);
     --wallet-watch-only-after-background: var(--blue-500);
     --wallet-watch-only-text: #ffffff;
     --wallet-active-text: #ffffff;
@@ -166,9 +182,11 @@
     // table
     --table-thead-bg: var(--blue-400);
     --table-row-bg: var(--blue-300);
-    --table-rounded-corners-border: 1px solid #33426e;
+    --table-info-border-color: #33426e;
 
-    --table-info-border: 1px solid #33426e;
+    --table-rounded-corners-border: 1px solid var(--table-info-border-color);
+
+    --table-info-border: 1px solid var(--table-info-border-color);
     --table-info-label-background: var(--blue-500);
 
     // buttons

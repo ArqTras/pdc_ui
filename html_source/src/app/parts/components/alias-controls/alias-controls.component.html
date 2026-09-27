@@ -1,48 +1,45 @@
-<div
-    class="controls"
-    fxFlex="0 0 auto"
-    fxLayout="row"
-    fxLayoutAlign="start center"
->
-    <ng-container
-        *ngIf="isShowRegisterAlias"
-    >
-        <button [routerLink]="['/assign-alias']" class="px-1 py-0_8 btn-light-background">
+<div class="controls" fxFlex="0 0 auto" fxLayout="row" fxLayoutAlign="start center">
+    <ng-container *ngIf="isShowAssignAlias">
+        <button [routerLink]="['/assign-alias']" class="px-1 py-0_8 btn-light-background" role="link" type="button">
             {{ 'WALLET.REGISTER_ALIAS' | translate }}
         </button>
     </ng-container>
 
-    <ng-container
-        *ngIf="isShowAlias"
-    >
-        <div [class.available]="variablesService.currentWallet.alias | isAvailableAliasName" class="alias mr-1">
-            {{ variablesService.currentWallet.alias.name }}
-        </div>
+    <ng-container *ngIf="isShowAlias">
+        <button
+            (click)="openMyAliasesDialog()"
+            [class.available]="variablesService.current_wallet.alias_info | isAvailableAliasName"
+            class="control-alias-wallet-container"
+            type="button"
+            aria-haspopup="true"
+            [attr.aria-label]="'@' + variablesService.current_wallet.alias_info?.alias"
+        >
+            <div class="alias">
+                @{{ variablesService.current_wallet.alias_info?.alias }}
+                <mat-icon svgIcon="pdc-circle-arrow-right"></mat-icon>
+            </div>
 
-        <ng-container *ngIf="isShowAliasButtons">
-            <button
-                [delay]="500"
-                [routerLink]="['/edit-alias']"
-                [timeDelay]="500"
-                class="btn-icon circle small mr-1"
-                placement="bottom-right"
-                tooltip="{{ 'WALLET.TOOLTIPS.EDIT_ALIAS' | translate }}"
-                tooltipClass="table-tooltip account-tooltip"
-            >
-                <mat-icon svgIcon="pdc-edit"></mat-icon>
-            </button>
-
-            <button
-                [delay]="500"
-                [routerLink]="['/transfer-alias']"
-                [timeDelay]="500"
-                class="btn-icon circle small"
-                placement="right"
-                tooltip="{{ 'WALLET.TOOLTIPS.TRANSFER_ALIAS' | translate }}"
-                tooltipClass="table-tooltip account-tooltip"
-            >
-                <mat-icon svgIcon="pdc-send"></mat-icon>
-            </button>
-        </ng-container>
+            <ng-container *ngIf="variablesService.current_wallet.alias_info_list.length > 1">
+                <div
+                    [delay]="150"
+                    [placement]="'bottom'"
+                    [timeout]="0"
+                    [timeDelay]="800"
+                    [tooltipClass]="'table-tooltip'"
+                    [tooltip]="tooltipListTemplate"
+                    class="count"
+                >
+                    +{{ variablesService.current_wallet.alias_info_list.length - 1 }}
+                </div>
+            </ng-container>
+        </button>
     </ng-container>
 </div>
+
+<ng-template #tooltipListTemplate>
+    <ul class="tooltip-list">
+        <ng-container *ngFor="let alias_info of variablesService.current_wallet.alias_info_list; let last = last">
+            <li *ngIf="!last">@{{ alias_info.alias }}</li>
+        </ng-container>
+    </ul>
+</ng-template>

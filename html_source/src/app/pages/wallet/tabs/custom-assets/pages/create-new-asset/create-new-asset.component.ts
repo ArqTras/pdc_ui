@@ -12,6 +12,7 @@ import { intToMoney } from '@parts/functions/int-to-money';
 import { moneyToInt } from '@parts/functions/money-to-int';
 import { TransactionDetailsForCustomAssetsComponent } from '../../modals/transaction-details-for-custom-assets/transaction-details-for-custom-assets.component';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { MAX_COMMENT_LENGTH, MAXIMUM_VALUE } from '@parts/data/constants';
 
 type CreateNewAssetFrom = FormGroup<{
     ticker: FormControl<string>;
@@ -31,7 +32,7 @@ type CreateNewAssetFrom = FormGroup<{
 export class CreateNewAssetComponent {
     public readonly breadcrumbItems: BreadcrumbItems = [
         {
-            routerLink: '/custom-assets',
+            routerLink: '/wallet/custom-assets',
             title: 'CREATE_NEW_ASSETS.BREADCRUMBS.BREADCRUMB1',
         },
         {
@@ -42,6 +43,14 @@ export class CreateNewAssetComponent {
     public readonly variablesService: VariablesService = inject(VariablesService);
 
     private readonly _backendService: BackendService = inject(BackendService);
+
+    get disabledCreate(): boolean {
+        const { current_wallet, daemon_state } = this.variablesService;
+        if (!current_wallet) {
+            return true;
+        }
+        return !current_wallet.loaded || daemon_state !== 2 || this.form.invalid;
+    }
 
     private readonly _fb: NonNullableFormBuilder = inject(NonNullableFormBuilder);
 
@@ -61,12 +70,12 @@ export class CreateNewAssetComponent {
             total_max_supply: this._fb.control<string>(undefined, [Validators.required]),
             current_supply: this._fb.control<string>(undefined, [Validators.required]),
             decimal_point: this._fb.control<string>('12', [Validators.required, Validators.min(0), Validators.max(18)]),
-            meta_info: this._fb.control<string>('', [Validators.maxLength(255)]),
+            meta_info: this._fb.control<string>('', [Validators.maxLength(MAX_COMMENT_LENGTH)]),
             hidden_supply: this._fb.control<boolean>(false),
         },
         {
             validators: [
-                (control: AbstractControl) => {
+                (control: AbstractControl): ValidationErrors => {
                     const error = {
                         current_supply: 'ERRORS.CANNOT_BE_GREATER_THAN_TOTAL_MAX_SUPPLY',
                     };
@@ -80,12 +89,11 @@ export class CreateNewAssetComponent {
                     return null;
                 },
                 (control: AbstractControl): ValidationErrors => {
-                    const { maximum_value } = this.variablesService;
                     const { value: decimal_point } = control.get('decimal_point');
                     const { value: total_max_supply } = control.get('total_max_supply');
 
                     const prepared_total_max_supply = new BigNumber(total_max_supply);
-                    const max = new BigNumber(intToMoney(maximum_value, +decimal_point || 0));
+                    const max = new BigNumber(intToMoney(MAXIMUM_VALUE, +decimal_point || 0));
                     const error = { greater_than_max: { max: max.toString() } };
 
                     if (prepared_total_max_supply.isGreaterThan(max)) {
@@ -125,7 +133,7 @@ export class CreateNewAssetComponent {
     }
 
     submit(): void {
-        const { address, wallet_id } = this.variablesService.currentWallet;
+        const { address, wallet_id } = this.variablesService.current_wallet;
         const { ticker, full_name, meta_info, hidden_supply, current_supply, total_max_supply, decimal_point } = this.form.getRawValue();
 
         let countDestination = 1;
@@ -187,11 +195,13 @@ export class CreateNewAssetComponent {
                             method: 'deploy_asset',
                             params,
                         },
-                        async (job_id: number): Promise<void> => {
+                        (job_id: number) => {
                             this._ngZone.run(() => this.details(job_id));
                         }
                     );
                 },
             });
     }
+
+    protected readonly MAX_COMMENT_LENGTH = MAX_COMMENT_LENGTH;
 }

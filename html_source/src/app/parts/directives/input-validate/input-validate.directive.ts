@@ -13,7 +13,7 @@ export class InputValidateDirective {
 
     private _decimalPoint: number = this.variablesService.decimal_point;
 
-    @Input('decimalPoint')
+    @Input()
     public set decimalPoint(value: number) {
         this._decimalPoint = value;
         this._formatValue();

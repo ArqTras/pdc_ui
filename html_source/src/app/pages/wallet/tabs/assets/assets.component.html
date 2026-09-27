@@ -1,191 +1,244 @@
-<div fxFlexFill fxLayout="column">
-    <div [class.mb-2]="isShowPagination" class="scrolled-content" fxFlex="1 1 auto">
-        <table class="pdc-table assets-table">
+<section *ngIf="variablesService.current_wallet.loaded; else skeletonTemplate" fxFlexFill fxLayout="column">
+    <div class="scrolled-content" fxFlex="1 1 auto">
+        <table [attr.aria-label]="'ACCESSIBILITY.ASSETS.LABELS.LABEL1' | translate" class="pdc-table assets-table">
             <thead>
-            <tr>
-                <th>
-                    <div class="bg title">
-                        {{ 'ASSETS.TABLE.LABELS.NAME' | translate }}
-                    </div>
-                </th>
-                <th>
-                    <div class="bg title">
-                        {{ 'ASSETS.TABLE.LABELS.BALANCE' | translate }}
-                    </div>
-                </th>
-                <th>
-                    <div class="bg title">
-                        {{ 'ASSETS.TABLE.LABELS.VALUE' | translate }}
-                    </div>
-                </th>
-                <th>
-                    <div class="bg title">
-                        {{ 'ASSETS.TABLE.LABELS.PRICE' | translate }}
-                    </div>
-                </th>
-                <th>
-                    <div class="bg title">&nbsp;</div>
-                </th>
-            </tr>
-            <div class="row-divider"></div>
+                <tr>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.NAME' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.BALANCE' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.PRICE' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.VALUE' | translate }}
+                        </div>
+                    </th>
+                    <th style="width: 7rem" scope="col">
+                        <div class="bg title">&nbsp;</div>
+                    </th>
+                </tr>
+                <tr aria-hidden="true" class="row-divider"></tr>
             </thead>
             <tbody>
-            <ng-container *ngFor="let balance of variablesService.currentWallet.balances$ | async | paginate :
-                paginatePipeArgs; trackBy: trackByAssets">
-                <tr
-                    [delay]="100"
-                    [placement]="'bottom'"
-                    [timeDelay]="1500"
-                    [tooltipClass]="'balance-tooltip'"
-                    [tooltip]="getBalanceTooltip(balance)"
+                <ng-container
+                    *ngFor="
+                        let balance of variablesService.current_wallet.balances$ | async | paginate : paginatePipeArgs;
+                        trackBy: trackByAssets
+                    "
                 >
-                    <td>
-                        <div class="text-ellipsis" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="2rem">
-                            <div [innerHTML]="balance.asset_info | getLogoByAssetInfo" class="token-logo mr-1"></div>
-                            <b class="text-ellipsis">{{ balance.asset_info.full_name }}</b>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-ellipsis">
-                            <b *appVisibilityBalance>
-                                {{ balance.total | intToMoney : balance.asset_info.decimal_point }}
-                                {{ balance.asset_info.ticker }}
-                            </b>
-                        </div>
-                    </td>
-
-                    <ng-container
-                        *ngIf="isShowPriceColumns(balance); else templateNotLoadPrice">
+                    <tr
+                        (click)="navigateToSend($event, balance)"
+                        (keydown.enter)="navigateToSend($event, balance)"
+                        (keydown.space)="navigateToSend($event, balance)"
+                        [attr.aria-label]="
+                            'ACCESSIBILITY.ASSETS.LABELS.LABEL6'
+                                | translate
+                                    : {
+                                          full_name: balance.asset_info.full_name
+                                      }
+                        "
+                        [delay]="250"
+                        [placement]="'bottom'"
+                        [timeDelay]="2500"
+                        [tooltipClass]="'balance-tooltip'"
+                        [tooltip]="getBalanceTooltip(balance)"
+                        role="button"
+                        tabindex="0"
+                    >
+                        <!--Name-->
                         <td>
-                            <div class="text-ellipsis">
-                                <b *appVisibilityBalance>{{
-                                        (balance.total | intToMoney : balance.asset_info.decimal_point) *
-                                        variablesService.pdcMoneyEquivalent | currency : 'USD'
-                                    }}</b>
+                            <div class="cell-name">
+                                <div [innerHTML]="balance.asset_info | getLogoByAssetInfo" aria-hidden="true" class="token-logo mr-2"></div>
+                                <span class="text-ellipsis">
+                                    <b>{{ balance.asset_info.full_name }}</b>
+                                </span>
                             </div>
                         </td>
+
+                        <!--Balance-->
+                        <td>
+                            <pdc-cell-asset-balance [balance]="balance"></pdc-cell-asset-balance>
+                        </td>
+
+                        <!--Price-->
                         <td>
                             <div class="text-ellipsis">
-                                <b class="mr-0_5">{{ variablesService.pdcMoneyEquivalent | currency : 'USD' }}</b>
-                                <span
-                                    [class.color-aqua]="variablesService.pdcMoneyEquivalentPercent > 0"
-                                    [class.color-red]="variablesService.pdcMoneyEquivalentPercent < 0"
-                                >{{ variablesService.pdcMoneyEquivalentPercent | number : '1.2-2' }} %</span>
+                                <ng-container *ngIf="getFiatPriceData(balance) as fiatPriceData">
+                                    <b [matTooltip]="fiatPriceData.tooltipValue" class="mr-1" matTooltipShowDelay="1500">
+                                        {{ fiatPriceData.value }} {{ fiatPriceData.currency }}
+                                    </b>
+                                    <span *ngIf="fiatPriceData.showChange" [ngClass]="fiatPriceData.changeClass">
+                                        {{ fiatPriceData.change }} %
+                                    </span>
+                                </ng-container>
                             </div>
                         </td>
-                    </ng-container>
 
-                    <ng-template #templateNotLoadPrice>
-                        <td></td>
-                        <td></td>
-                    </ng-template>
+                        <!--Value-->
+                        <td>
+                            <div class="text-ellipsis">
+                                <b *appVisibilityBalance>
+                                    <ng-container *ngIf="getViewBalanceData(balance) as viewBalanceData">
+                                        {{ viewBalanceData.value }} {{ viewBalanceData.currency }}
+                                    </ng-container>
+                                </b>
+                            </div>
+                        </td>
 
-                    <td>
-                        <div class="text-ellipsis" fxLayout="row" fxLayoutAlign="end center">
+                        <!--Actions-->
+                        <td class="text-align-end">
                             <button
-                                #trigger="cdkOverlayOrigin"
-                                (click)="toggleDropDownMenu(trigger, balance); $event.stopPropagation()"
-                                [disabled]="false"
-                                cdkOverlayOrigin
-                                class="btn-icon circle row-options small ml-auto"
+                                (click)="$event.stopPropagation()"
+                                (keydown.enter)="$event.stopPropagation()"
+                                (keydown.space)="$event.stopPropagation()"
+                                [attr.aria-label]="
+                                    'ACCESSIBILITY.ASSETS.LABELS.LABEL5' | translate : { full_name: balance.asset_info.full_name }
+                                "
+                                [matMenuTriggerFor]="menu"
+                                aria-haspopup="menu"
+                                class="btn-icon circle row-options small"
                                 type="button"
                             >
                                 <mat-icon class="small" svgIcon="pdc-row-options"></mat-icon>
                             </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="row-divider"></tr>
-            </ng-container>
+
+                            <mat-menu #menu="matMenu" class="pdc-mat-menu">
+                                <button (click)="assetDetails(balance)" mat-menu-item type="button">
+                                    <mat-icon svgIcon="pdc-info-v2"></mat-icon>
+                                    <span>{{ 'ASSETS.DROP_DOWN_MENU.ASSET_DETAILS' | translate }}</span>
+                                </button>
+                                <ng-container *ngIf="isWalletReady()">
+                                    <button (click)="navigateToSend($event, balance)" mat-menu-item type="button">
+                                        <mat-icon svgIcon="pdc-send"></mat-icon>
+                                        <span>{{ 'ASSETS.DROP_DOWN_MENU.SEND' | translate }}</span>
+                                    </button>
+
+                                    <ng-container *ngIf="variablesService.is_hardfok_active$ | async">
+                                        <button [state]="{ asset: balance }" mat-menu-item routerLink="/wallet/create-swap" type="button">
+                                            <mat-icon svgIcon="pdc-swap"></mat-icon>
+                                            <span>{{ 'ASSETS.DROP_DOWN_MENU.SWAP' | translate }}</span>
+                                        </button>
+                                    </ng-container>
+
+                                    <ng-container *ngIf="isShowDeleteAsset(balance)">
+                                        <button (click)="beforeRemoveAsset(balance)" mat-menu-item type="button">
+                                            <mat-icon svgIcon="pdc-delete"></mat-icon>
+                                            <span>{{ 'ASSETS.DROP_DOWN_MENU.REMOVE_ASSET' | translate }}</span>
+                                        </button>
+                                    </ng-container>
+                                </ng-container>
+                            </mat-menu>
+                        </td>
+                    </tr>
+                    <tr aria-hidden="true" class="row-divider"></tr>
+                </ng-container>
             </tbody>
         </table>
     </div>
 
-    <pagination-template
-        #p="paginationApi"
-        (pageChange)="paginatePipeArgs.currentPage = $event"
-        *ngIf="isShowPagination"
-        [id]="paginatePipeArgs.id"
-        class="ngx-pagination custom-pagination"
-    >
-        <button (click)="p.previous()" [disabled]="p.isFirstPage()"
-                class="pagination-previous btn-icon circle small mr-0_5">
-            <mat-icon svgIcon="pdc-arrow-left"></mat-icon>
-        </button>
+    <div class="assets-footer">
+        <div class="pagination">
+            <pagination-template
+                *ngIf="isShowPagination()"
+                [id]="paginatePipeArgs.id"
+                [attr.aria-label]="'ACCESSIBILITY.PAGINATION.LABELS.LABEL1' | translate"
+                (pageChange)="paginatePipeArgs.currentPage = $event"
+                #p="paginationApi"
+                class="ngx-pagination custom-pagination"
+                tabindex="0"
+            >
+                <button
+                    (click)="p.previous()"
+                    [attr.aria-label]="'ACCESSIBILITY.PAGINATION.LABELS.LABEL2' | translate"
+                    [disabled]="p.isFirstPage()"
+                    class="pagination-previous btn-icon circle small mr-0_5"
+                    tabindex="0"
+                >
+                    <mat-icon svgIcon="pdc-arrow-left"></mat-icon>
+                </button>
 
-        <div *ngFor="let page of p.pages; trackBy: trackByPages" [class.current]="p.getCurrent() === page.value"
-             class="mr-0_5">
-            <a (click)="p.setCurrent(page.value)" *ngIf="p.getCurrent() !== page.value">
-                <span>{{ page.label }}</span>
-            </a>
-            <div *ngIf="p.getCurrent() === page.value">
-                <span>{{ page.label }}</span>
-            </div>
+                <div *ngFor="let page of p.pages; trackBy: trackByIndex" [class.current]="p.getCurrent() === page.value" class="mr-0_5">
+                    <a (click)="p.setCurrent(page.value)" *ngIf="p.getCurrent() !== page.value" role="button" tabindex="0">
+                        <span>{{ page.label }}</span>
+                    </a>
+                    <div *ngIf="p.getCurrent() === page.value" tabindex="0">
+                        <span>{{ page.label }}</span>
+                    </div>
+                </div>
+
+                <button
+                    (click)="p.next()"
+                    [attr.aria-label]="'ACCESSIBILITY.PAGINATION.LABELS.LABEL3' | translate"
+                    [disabled]="p.isLastPage()"
+                    class="pagination-next btn-icon circle small"
+                    tabindex="0"
+                >
+                    <mat-icon svgIcon="pdc-arrow-right"></mat-icon>
+                </button>
+            </pagination-template>
         </div>
 
-        <button (click)="p.next()" [disabled]="p.isLastPage()" class="pagination-next btn-icon circle small">
-            <mat-icon svgIcon="pdc-arrow-right"></mat-icon>
-        </button>
-    </pagination-template>
-</div>
+        <div class="hide-empty-assets">
+            <label class="mr-2">{{ 'ASSETS.HIDE_EMPTY' | translate }}</label>
+            <app-switch
+                (emitChange)="setHideEmptyAssets($event)"
+                [value]="variablesService.current_wallet.settings.hideEmptyAssets"
+            ></app-switch>
+        </div>
+    </div>
+</section>
 
-<ng-template
-    (backdropClick)="$event.stopPropagation(); isOpenDropDownMenu = false"
-    [cdkConnectedOverlayBackdropClass]="'opacity-0'"
-    [cdkConnectedOverlayHasBackdrop]="true"
-    [cdkConnectedOverlayOpen]="isOpenDropDownMenu"
-    [cdkConnectedOverlayOrigin]="triggerOrigin"
-    [cdkConnectedOverlayPositions]="[
-                {
-                    originX: 'end',
-                    originY: 'top',
-                    overlayX: 'end',
-                    overlayY: 'top',
-                    offsetY: 30
-                }
-            ]"
-    cdkConnectedOverlay
->
-    <ul (click)="isOpenDropDownMenu = false" class="list">
-        <li class="item">
-            <button (click)="assetDetails()" class="w-100 px-2 py-1" type="button">
-                <mat-icon class="mr-1" svgIcon="pdc-info-v2"></mat-icon>
-                <span>{{ 'ASSETS.DROP_DOWN_MENU.ASSET_DETAILS' | translate }}</span>
-            </button>
-        </li>
-
-        <ng-container
-            *ngIf="
-                        variablesService.currentWallet.loaded &&
-                        variablesService.daemon_state === 2 &&
-                        !variablesService.currentWallet.is_auditable &&
-                        !variablesService.currentWallet.is_watch_only
-                    "
-        >
-            <li class="item">
-                <button [state]="{ asset: currentAssetBalance }" class="w-100 px-2 py-1" routerLink="/wallet/send">
-                    <mat-icon class="mr-1" svgIcon="pdc-send"></mat-icon>
-                    <span>{{ 'Send' | translate }}</span>
-                </button>
-            </li>
-            <ng-container *ngIf="variablesService.is_hardfok_active$ | async">
-                <li class="item">
-                    <button [state]="{ asset: currentAssetBalance }" class="w-100 px-2 py-1"
-                            routerLink="/wallet/create-swap">
-                        <mat-icon class="mr-1" svgIcon="pdc-swap"></mat-icon>
-                        <span>{{ 'Swap' | translate }}</span>
-                    </button>
-                </li>
-            </ng-container>
-        </ng-container>
-
-        <ng-container *ngIf="isShowDeleteAsset()">
-            <li class="item">
-                <button (click)="beforeRemoveAsset()" class="w-100 px-2 py-1" type="button">
-                    <mat-icon class="mr-1" svgIcon="pdc-delete"></mat-icon>
-                    <span>{{ 'ASSETS.DROP_DOWN_MENU.REMOVE_ASSET' | translate }}</span>
-                </button>
-            </li>
-        </ng-container>
-    </ul>
+<ng-template #skeletonTemplate>
+    <section class="overflow-hidden">
+        <table [attr.aria-label]="'ACCESSIBILITY.ASSETS.LABELS.LABEL1' | translate" class="pdc-table assets-table">
+            <thead>
+                <tr>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.NAME' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.BALANCE' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.PRICE' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">
+                            {{ 'ASSETS.TABLE.LABELS.VALUE' | translate }}
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="bg title">&nbsp;</div>
+                    </th>
+                </tr>
+                <tr aria-hidden="true" class="row-divider"></tr>
+            </thead>
+            <tbody>
+                <ng-container *ngFor="let _ of skeletonRows; trackBy: trackByIndex">
+                    <tr style="background: none">
+                        <td colspan="5" style="padding: 0">
+                            <div class="skeleton skeleton-table-row"></div>
+                        </td>
+                    </tr>
+                    <tr aria-hidden="true" class="row-divider"></tr>
+                </ng-container>
+            </tbody>
+        </table>
+    </section>
 </ng-template>

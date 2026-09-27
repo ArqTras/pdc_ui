@@ -1,17 +1,19 @@
-<div class="container scrolled-content">
+<section class="container scrolled-content">
     <app-breadcrumbs [items]="breadcrumbItems" class="mb-2"></app-breadcrumbs>
 
-    <form [formGroup]="form" class="form">
-        <div class="form__field textarea mb-2">
+    <form *ngIf="variablesService.current_wallet.loaded; else skeletonTemplate" [formGroup]="form" class="form" role="form">
+        <fieldset class="form__field textarea mb-2">
             <label for="swap-proposal-hex">
                 {{ 'CONFIRM_SWAP.FORM.LABELS.LABEL1' | translate }}
             </label>
             <textarea
                 [placeholder]="'CONFIRM_SWAP.FORM.PLACEHOLDERS.PLACEHOLDER1' | translate"
+                aria-required="true"
+                maxlength="15000"
                 formControlName="hex_raw_proposal"
                 id="swap-proposal-hex"
             ></textarea>
-        </div>
+        </fieldset>
 
         <div *ngIf="proposalDetails" class="form__field mb-2">
             <label for="swap-proposal-hex">
@@ -19,46 +21,70 @@
             </label>
             <div class="table-info">
                 <div class="row">
-                    <div class="label max-w-19-rem w-100">
+                    <div class="title max-w-19-rem w-100">
                         {{ 'CONFIRM_SWAP.FORM.TABLE.LABELS.LABEL1' | translate }}
                     </div>
 
                     <div class="text">
-                        <p *ngFor="let item of proposalDetails.to_initiator">
-                            {{ item.amount | intToMoney : (item.asset_id | getAssetInfo)?.decimal_point }}
-                            {{ (item.asset_id | getAssetInfo)?.ticker || '***' }}
-                        </p>
+                        <ng-container *ngFor="let item of proposalDetails.to_initiator">
+                            <p>
+                                <span>
+                                    {{ item.amount | intToMoney : (item.asset_id | getAssetInfo)?.decimal_point }}
+                                    {{ (item.asset_id | getAssetInfo)?.ticker || '***' }}
+                                </span>
+                                <pdc-asset-tag [assetId]="item.asset_id" class="ml-0_5"></pdc-asset-tag>
+                            </p>
+                        </ng-container>
                     </div>
                 </div>
 
-                <hr class="separator" />
+                <hr aria-hidden="true" class="separator" />
 
                 <div class="row">
-                    <div class="label max-w-19-rem w-100">
+                    <div class="title max-w-19-rem w-100">
                         {{ 'CONFIRM_SWAP.FORM.TABLE.LABELS.LABEL2' | translate }}
                     </div>
                     <div class="text">
-                        <p *ngFor="let item of proposalDetails.to_finalizer">
-                            {{ item.amount | intToMoney : (item.asset_id | getAssetInfo)?.decimal_point }}
-                            {{ (item.asset_id | getAssetInfo)?.ticker || '***' }}
-                        </p>
+                        <ng-container *ngFor="let item of proposalDetails.to_finalizer">
+                            <p>
+                                <span>
+                                    {{ item.amount | intToMoney : (item.asset_id | getAssetInfo)?.decimal_point }}
+                                    {{ (item.asset_id | getAssetInfo)?.ticker || '***' }}
+                                </span>
+                                <pdc-asset-tag [assetId]="item.asset_id" class="ml-0_5"></pdc-asset-tag>
+                            </p>
+                        </ng-container>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="actions">
-            <button (click)="swapConfirmMasterPasswordDialog()" [disabled]="!proposalDetails" class="btn primary big w-100" type="button">
+            <button
+                (click)="swapConfirmMasterPasswordDialog()"
+                [disabled]="!proposalDetails"
+                class="btn primary big w-100 mr-0_5"
+                type="button"
+            >
                 {{ 'CONFIRM_SWAP.FORM.BUTTONS.BUTTON1' | translate }}
             </button>
 
-            <a class="btn outline big w-100" routerLink="/wallet/swap">
+            <a class="btn outline big w-100 ml-0_5" role="link" routerLink="/wallet/swap">
                 {{ 'CONFIRM_SWAP.FORM.BUTTONS.BUTTON2' | translate }}
             </a>
         </div>
 
-        <div *ngIf="errorRpc" class="error mt-2">
+        <div *ngIf="errorRpc" aria-live="assertive" class="error mt-2">
             {{ 'ERRORS.INVALID_PROPOSAL' | translate }}
         </div>
     </form>
-</div>
+</section>
+
+<ng-template #skeletonTemplate>
+    <div class="skeleton-form">
+        <div class="skeleton skeleton-form-label-2 mb-2"></div>
+        <div class="skeleton skeleton-form-field-description mb-2"></div>
+
+        <div class="skeleton skeleton-form-button"></div>
+    </div>
+</ng-template>

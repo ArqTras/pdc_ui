@@ -1,35 +1,44 @@
 import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
-import { DeeplinkParams, Wallet } from '@api/models/wallet.model';
+import { Wallet } from '@api/models/wallet.model';
 import { Contact } from '@api/models/contact.model';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, EMPTY, from, mergeMap, Observable, Subject, take, toArray } from 'rxjs';
 import { Idle } from 'idlejs/dist';
 import { Router } from '@angular/router';
 import { ContextMenuComponent, ContextMenuService } from '@perfectmemory/ngx-contextmenu';
-import { BigNumber } from 'bignumber.js';
-import { Aliases } from '@api/models/alias.model';
-import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { Dialog } from '@angular/cdk/dialog';
 import { MatDialog } from '@angular/material/dialog';
-import { VerifiedAssetInfoWhitelist } from '@api/models/assets.model';
+import { AssetBalance, AssetInfo, VerifiedAssetInfoWhitelist } from '@api/models/assets.model';
+import { CurrentPriceForAssets } from '@api/models/api-pdc.models';
+import { ApiService } from '@api/services/api.service';
+import { WrapInfo } from '@api/models/wrap-info';
+import { DeeplinkResponse } from '@api/models/deeplink.model';
+import { DEFAULT_FEE, DEFAULT_FEE_BIG, DEFAULT_PRICE_ALIAS, MAX_COMMENT_LENGTH, MAX_WALLET_NAME_LENGTH } from '@parts/data/constants';
+import { AppSettings } from '@parts/interfaces/app-settings.interface';
+import { createDefaultAppSettings } from '@parts/functions/create-default-app-settings';
 
 @Injectable({
     providedIn: 'root',
 })
 export class VariablesService implements OnDestroy {
+    settings: AppSettings = createDefaultAppSettings();
+
     disable_price_fetch$ = new BehaviorSubject<boolean>(false);
 
-    visibilityBalance$ = new BehaviorSubject<boolean>(true);
+    visibilityBalance$ = new BehaviorSubject<boolean>(this.settings.visibilityBalance);
 
-    pdc_current_supply = undefined;
+    zano_current_supply = undefined;
 
     rpc_port!: number;
+
+    is_remote_node = false;
 
     use_debug_mode$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     info$: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
     is_hardfok_active$: Observable<boolean> = this.info$.pipe(
-        map(info => {
+        map((info) => {
             return Boolean(info?.['is_hardfok_active']?.[4]);
         }),
         distinctUntilChanged()
@@ -37,48 +46,37 @@ export class VariablesService implements OnDestroy {
 
     stop_paginate = {};
 
-    sync_started: boolean = false;
+    sync_started = false;
 
-    decimal_point: number = 12;
+    decimal_point = 12;
 
-    appPass: string = '';
+    appPass = '';
 
-    // \(2^{64}-1\) => (18,446,744,073,709,551,615)
-    maximum_value: BigNumber = new BigNumber('18446744073709551615');
+    appLogin = false;
 
-    appLogin: boolean = false;
-
-    pdcMoneyEquivalent: number = 0;
-
-    pdcMoneyEquivalentPercent: number = 0;
-
-    defaultTicker: 'PDC' = 'PDC';
+    readonly defaultTicker = 'PDC';
 
     opening_wallet: Wallet;
 
-    exp_med_ts: number = 0;
+    exp_med_ts = 0;
 
-    net_time_delta_median: number = 0;
+    net_time_delta_median = 0;
 
-    height_app: number = 0;
+    height_app = 0;
 
-    height_max: number = 0;
+    height_max = 0;
 
-    downloaded: number = 0;
+    downloaded = 0;
 
-    total: number = 0;
+    total = 0;
 
-    last_build_available: string = '';
+    last_build_available = '';
 
-    last_build_displaymode: number = 0;
+    last_build_displaymode = 0;
 
-    daemon_state: number = 3;
+    daemon_state = 3;
 
     daemon_state$: BehaviorSubject<number> = new BehaviorSubject<number>(this.daemon_state);
-
-    deeplink$: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
-
-    sendActionData$: BehaviorSubject<DeeplinkParams> = new BehaviorSubject<DeeplinkParams>({});
 
     sync = {
         progress_value: 0,
@@ -97,62 +95,43 @@ export class VariablesService implements OnDestroy {
     };
 
     // Avoid of execute function before callback complete
-    get_recent_transfers: boolean = false;
+    get_recent_transfers = false;
 
-    default_fee: string = '0.010000000000';
+    default_fee = DEFAULT_FEE;
 
-    default_fee_big: BigNumber = new BigNumber('10000000000');
+    default_fee_big = DEFAULT_FEE_BIG;
 
-    settings = {
-        appLockTime: 15,
-        appLog: 0,
-        scale: '10px',
-        appUseTor: false,
-        visibilityBalance: true,
-        language: 'en',
-        default_path: '/',
-        viewedContracts: [],
-        notViewedContracts: [],
-        pdcCompanionForm: {
-            pdcCompation: false,
-            secret: '',
-        },
-        wallets: [],
-        isDarkTheme: true,
-        filters: {
-            stakingFilters: null
-        }
-    };
+    default_price_alias = DEFAULT_PRICE_ALIAS;
 
-    isDarkTheme$ = new BehaviorSubject(true);
+    isDarkTheme$ = new BehaviorSubject(this.settings.isDarkTheme);
 
-    count: number = 40;
+    count = 40;
 
-    maxPages: number = 5;
+    maxPages = 5;
 
-    testnet: boolean = false;
+    buildVersion: string | null = null;
+
+    testnet = false;
 
     networkType: 'mainnet' | 'testnet' = 'mainnet';
 
     wallets: Array<Wallet> = [];
 
-    currentWallet: Wallet;
+    current_wallet: Wallet;
 
-    aliases: Aliases = [];
+    currentPriceForAssets: CurrentPriceForAssets = {};
 
-    aliasesChecked: any = {};
+    currentPriceForAssets$: BehaviorSubject<CurrentPriceForAssets> = new BehaviorSubject({});
 
-    enableAliasSearch: boolean = false;
+    maxWalletNameLength: number = MAX_WALLET_NAME_LENGTH;
 
-    maxWalletNameLength: number = 25;
+    maxCommentLength: number = MAX_COMMENT_LENGTH;
 
-    maxCommentLength: number = 255;
-
-    dataIsLoaded: boolean = false;
+    dataIsLoaded = false;
 
     contacts: Array<Contact> = [];
 
-    pattern: string = '^[a-zA-Z0-9_.\\]*|~!?@#$%^&+{}()<>:;"\'-=/,[\\\\]*$';
+    pattern = '^[a-zA-Z0-9_.\\]*|~!?@#$%^&+{}()<>:;"\'-=/,[\\\\]*$';
 
     after_sync_request: any = {};
 
@@ -166,13 +145,17 @@ export class VariablesService implements OnDestroy {
 
     getTotalEvent = new BehaviorSubject(null);
 
-    getAliasChangedEvent = new BehaviorSubject(null);
+    currentWalletChanged$ = new BehaviorSubject<Wallet>(null);
 
-    currentWalletChangedEvent = new BehaviorSubject<Wallet>(null);
+    posStatusUpdated$ = new Subject<number>();
 
     refreshStakingEvent$: Subject<void> = new Subject<void>();
 
-    verifiedAssetInfoWhitelist$: BehaviorSubject<VerifiedAssetInfoWhitelist> = new BehaviorSubject([]);
+    verifiedAssetInfoWhitelist: VerifiedAssetInfoWhitelist = [];
+
+    get verifiedAssetIdWhitelist(): string[] {
+        return this.verifiedAssetInfoWhitelist.map(({ asset_id }: AssetInfo): string => asset_id);
+    }
 
     private _dialog: Dialog = inject(Dialog);
 
@@ -201,14 +184,49 @@ export class VariablesService implements OnDestroy {
 
     pasteSelectContextMenu: ContextMenuComponent<any>;
 
+    wrap_info$: BehaviorSubject<WrapInfo | null> = new BehaviorSubject<WrapInfo | null>(null);
+
+    is_wrap_info_service_inactive$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+
+    deeplinkResponse$: BehaviorSubject<DeeplinkResponse | null> = new BehaviorSubject<DeeplinkResponse | null>(null);
+
     private _destroy$: Subject<void> = new Subject<void>();
 
-    constructor(private router: Router, private ngZone: NgZone, private contextMenuService: ContextMenuService<any>) {
+    constructor(
+        private router: Router,
+        private ngZone: NgZone,
+        private _apiPdcService: ApiService,
+        private contextMenuService: ContextMenuService<any>
+    ) {
         this.visibilityBalance$.pipe(takeUntil(this._destroy$)).subscribe({
-            next: visibilityBalance => {
+            next: (visibilityBalance) => {
                 this.settings.visibilityBalance = visibilityBalance;
             },
         });
+    }
+
+    applySettings(settings: Partial<AppSettings>): void {
+        const nextSettings: AppSettings = {
+            ...this.settings,
+            ...settings,
+            viewedContracts: settings.viewedContracts ?? this.settings.viewedContracts,
+            notViewedContracts: settings.notViewedContracts ?? this.settings.notViewedContracts,
+            wallets: settings.wallets ?? this.settings.wallets,
+            zanoCompanionForm: {
+                ...this.settings.zanoCompanionForm,
+                ...(settings.zanoCompanionForm ?? {}),
+            },
+            filters: {
+                ...this.settings.filters,
+                ...(settings.filters ?? {}),
+            },
+            localBlacklistsOfVerifiedAssetsByWallets:
+                settings.localBlacklistsOfVerifiedAssetsByWallets ?? this.settings.localBlacklistsOfVerifiedAssetsByWallets,
+        };
+
+        this.settings = nextSettings;
+        this.isDarkTheme$.next(nextSettings.isDarkTheme);
+        this.visibilityBalance$.next(nextSettings.visibilityBalance);
     }
 
     ngOnDestroy(): void {
@@ -221,16 +239,16 @@ export class VariablesService implements OnDestroy {
     }
 
     get isCurrentWalletSync(): boolean {
-        if (this.currentWallet) {
-            const { wallet_id } = this.currentWallet;
+        if (this.current_wallet) {
+            const { wallet_id } = this.current_wallet;
             return this.sync_wallets[wallet_id] || false;
         }
         return false;
     }
 
     get isCurrentWalletLoaded(): boolean {
-        if (this.currentWallet) {
-            const { loaded } = this.currentWallet;
+        if (this.current_wallet) {
+            const { loaded } = this.current_wallet;
             return loaded;
         }
         return false;
@@ -275,17 +293,18 @@ export class VariablesService implements OnDestroy {
         }
     }
 
-    changeAliases(): void {
-        this.getAliasChangedEvent.next(true);
-    }
-
-    setCurrentWallet(id): void {
-        this.wallets.forEach(wallet => {
-            if (wallet.wallet_id === id) {
-                this.currentWallet = wallet;
-                this.currentWalletChangedEvent.next(wallet);
-            }
-        });
+    setCurrentWallet(id: number | null): void {
+        if (id !== null) {
+            this.wallets.forEach((wallet) => {
+                if (wallet.wallet_id === id) {
+                    this.current_wallet = wallet;
+                    this.currentWalletChanged$.next(wallet);
+                }
+            });
+        } else {
+            this.current_wallet = null;
+            this.currentWalletChanged$.next(null);
+        }
     }
 
     getWallet(id): Wallet | null {
@@ -374,5 +393,78 @@ export class VariablesService implements OnDestroy {
             $event.preventDefault();
             $event.stopPropagation();
         }
+    }
+
+    loadCurrentPriceForAllAssets(): void {
+        const wallets: Wallet[] = this.wallets;
+
+        if (!wallets.length) {
+            return;
+        }
+
+        const ids = new Set<string>([]);
+        wallets.forEach((wallet: Wallet) => {
+            const { balances } = wallet;
+            balances.forEach((balance: AssetBalance) => {
+                const {
+                    asset_info: { asset_id },
+                } = balance;
+                ids.add(asset_id);
+            });
+        });
+
+        this.loadCurrentPriceForAssetIds(Array.from(ids));
+    }
+
+    loadCurrentPriceForAssetIds(ids: string[]): void {
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return;
+        }
+
+        const concurrency = 6;
+
+        from(ids)
+            .pipe(
+                mergeMap(
+                    (asset_id: string) =>
+                        this._apiPdcService.getCurrentPriceForAsset(asset_id).pipe(
+                            map((resp) => ({ ...resp, asset_id })),
+                            catchError(() => EMPTY)
+                        ),
+                    concurrency
+                ),
+                toArray(),
+                map((results) => {
+                    const acc: CurrentPriceForAssets = {};
+                    for (const item of results) {
+                        if (!item) continue;
+                        const { asset_id, data, success } = item as { asset_id: string; data: any; success: boolean };
+
+                        if (!success) continue;
+                        if (!data || typeof data !== 'object') continue;
+
+                        const hasUsd = data?.usd !== undefined;
+                        const hasUsd24h = data?.usd_24h_change !== undefined;
+                        if (!hasUsd && !hasUsd24h) continue;
+
+                        if (asset_id) {
+                            acc[asset_id] = { data, success };
+                        }
+                    }
+                    return acc;
+                }),
+                take(1),
+                takeUntil(this._destroy$)
+            )
+            .subscribe({
+                next: (data: CurrentPriceForAssets) => {
+                    if (!data || Object.keys(data).length === 0) {
+                        return;
+                    }
+                    const merged: CurrentPriceForAssets = { ...this.currentPriceForAssets, ...data };
+                    this.currentPriceForAssets = merged;
+                    this.currentPriceForAssets$.next(merged);
+                },
+            });
     }
 }

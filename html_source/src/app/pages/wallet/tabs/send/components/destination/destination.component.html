@@ -1,0 +1,58 @@
+<div class="destination">
+    <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>
+
+    <ng-container [ngTemplateOutlet]="destinationFormTemplate"></ng-container>
+
+    <ng-container *ngIf="form.controls.is_visible_wrap_info.value" [ngTemplateOutlet]="zanoWrapInformationTemplate"></ng-container>
+</div>
+
+<ng-template #headerTemplate>
+    <div class="destination-header">
+        <h3 class="title">{{ 'SEND.DESTINATION' | translate }} {{ index + 1 }}</h3>
+
+        <div class="actions">
+            <button
+                *ngIf="!hideDuplicate"
+                [matTooltip]="'SEND.DUPLICATE' | translate"
+                matTooltipShowDelay="1500"
+                class="btn btn-icon circle big duplicate mr-1"
+                (click)="duplicate()"
+                type="button"
+                aria-label="Duplicate"
+            >
+                <mat-icon svgIcon="pdc-copy"></mat-icon>
+            </button>
+
+            <button
+                *ngIf="!hideRemove"
+                [matTooltip]="'SEND.REMOVE' | translate"
+                matTooltipShowDelay="1500"
+                (click)="remove()"
+                [attr.aria-label]="'ACCESSIBILITY.SEND.LABELS.LABEL1' | translate"
+                class="btn btn-icon circle big remove"
+                type="button"
+            >
+                <mat-icon svgIcon="pdc-close"></mat-icon>
+            </button>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #destinationFormTemplate>
+    <div class="destination-form">
+        <div class="destination-form__row">
+            <!-- Asset -->
+            <pdc-asset-field class="mr-1" [formRef]="form"></pdc-asset-field>
+
+            <!-- Amount -->
+            <pdc-amount-field class="ml-1" [formRef]="form"></pdc-amount-field>
+        </div>
+
+        <!-- Address -->
+        <pdc-address-field [formRef]="form"></pdc-address-field>
+    </div>
+</ng-template>
+
+<ng-template #zanoWrapInformationTemplate>
+    <pdc-wrap-information [formRef]="form"></pdc-wrap-information>
+</ng-template>

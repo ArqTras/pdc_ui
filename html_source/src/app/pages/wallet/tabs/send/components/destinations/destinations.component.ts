@@ -1,0 +1,40 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { DestinationFormGroup } from '../../send.component';
+import { MatIconModule } from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
+import { MatDividerModule } from '@angular/material/divider';
+import { FormArray } from '@angular/forms';
+import { DestinationComponent } from '../destination/destination.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
+@Component({
+    selector: 'pdc-destinations',
+    standalone: true,
+    imports: [CommonModule, MatIconModule, TranslateModule, MatDividerModule, DestinationComponent, MatTooltipModule],
+    templateUrl: './destinations.component.html',
+    styleUrls: ['./destinations.component.scss'],
+})
+export class DestinationsComponent {
+    @Input('formArrayRef') formArray: FormArray<DestinationFormGroup>;
+
+    @Input() canAddOrDuplicate: boolean;
+
+    @Output() onRemove = new EventEmitter<number>();
+
+    @Output() onDuplicate = new EventEmitter<DestinationFormGroup>();
+
+    @Output() onAdd = new EventEmitter<void>();
+
+    remove(index: number): void {
+        this.onRemove.emit(index);
+    }
+
+    add(): void {
+        this.onAdd.emit();
+    }
+
+    duplicate(form: DestinationFormGroup): void {
+        this.onDuplicate.emit(form);
+    }
+}

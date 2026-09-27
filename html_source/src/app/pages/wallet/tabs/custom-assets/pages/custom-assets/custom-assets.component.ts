@@ -1,6 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PaginatePipeArgs } from 'ngx-pagination';
-import { CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { AssetInfo } from '@api/models/assets.model';
 import { VariablesService } from '@parts/services/variables.service';
 import { WalletsService } from '@parts/services/wallets.service';
@@ -8,9 +7,9 @@ import { AssetDetailsComponent } from '@parts/modals/asset-details/asset-details
 import { UpdateCustomAssetComponent } from '../../modals/update-custom-asset/update-custom-asset.component';
 import { BurnCustomAssetComponent } from '../../modals/burn-custom-asset/burn-custom-asset.component';
 import { EmitCustomAssetComponent } from '../../modals/emit-custom-asset/emit-custom-asset.component';
-import { filter, switchMap } from 'rxjs/operators';
+import { filter, switchMap, takeUntil } from 'rxjs/operators';
 import { TransactionDetailsForCustomAssetsComponent } from '../../modals/transaction-details-for-custom-assets/transaction-details-for-custom-assets.component';
-import { Observable, take } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 
 @Component({
@@ -18,111 +17,78 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
     templateUrl: './custom-assets.component.html',
     styleUrls: ['./custom-assets.component.scss'],
 })
-export class CustomAssetsComponent implements OnInit {
-    paginationId: string = 'pagination-custom-assets-id';
+export class CustomAssetsComponent implements OnInit, OnDestroy {
+    readonly skeletonRows = Array.from({ length: 20 });
 
-    triggerOrigin: CdkOverlayOrigin | undefined;
-
-    currentAssetInfo: AssetInfo | undefined;
-
-    isOpenDropDownMenu: boolean = false;
-
-    connectedOverlayPositions: ConnectedPosition[] = [
-        {
-            originX: 'end',
-            originY: 'top',
-            overlayX: 'end',
-            overlayY: 'top',
-            offsetY: 30,
-        },
-    ];
-    paginateArgs: PaginatePipeArgs = {
-        id: this.paginationId,
+    readonly paginateArgs: PaginatePipeArgs = {
+        id: 'pagination-custom-assets-id',
         itemsPerPage: 10,
         currentPage: 1,
     };
+    private readonly _destroy$ = new Subject<void>();
 
-    public variablesService: VariablesService = inject(VariablesService);
+    constructor(
+        public readonly variablesService: VariablesService,
+        private readonly _matDialog: MatDialog,
+        private readonly _walletsService: WalletsService
+    ) {}
 
-    private readonly _matDialog: MatDialog = inject(MatDialog);
+    get disabledCreateNewAsset(): boolean {
+        const { current_wallet, daemon_state } = this.variablesService;
+        return !current_wallet?.loaded || daemon_state !== 2;
+    }
 
-    private readonly _walletsService: WalletsService = inject(WalletsService);
-
-    get assets(): AssetInfo[] {
+    get assetInfoItems(): AssetInfo[] {
         return this._walletsService.currentWallet?.assetsInfoWhitelist?.own_assets ?? [];
     }
 
     get isShowPagination(): boolean {
-        const { currentWallet } = this.variablesService;
-        if (!currentWallet) {
-            return false;
-        }
-        const {
-            assetsInfoWhitelist: { own_assets },
-        } = currentWallet;
-        return own_assets?.length > this.paginateArgs.itemsPerPage;
+        const ownAssets = this.variablesService.current_wallet?.assetsInfoWhitelist?.own_assets;
+        return (ownAssets?.length ?? 0) > Number(this.paginateArgs.itemsPerPage);
     }
 
     ngOnInit(): void {
-        this._loadAssets();
+        this._loadAssetsInfoWhitelist();
+        interval(5 * 60 * 1000)
+            .pipe(takeUntil(this._destroy$))
+            .subscribe(() => {
+                this._loadAssetsInfoWhitelist();
+            });
     }
 
-    toggleDropDownMenu(trigger: CdkOverlayOrigin, asset: AssetInfo): void {
-        this.isOpenDropDownMenu = !this.isOpenDropDownMenu;
-        this.triggerOrigin = trigger;
-        this.currentAssetInfo = asset;
+    ngOnDestroy(): void {
+        this._destroy$.next();
+        this._destroy$.complete();
     }
 
-    closeDropDownMenu(): void {
-        this.isOpenDropDownMenu = false;
-    }
-
-    trackByAssets(index: number): number | string {
+    trackByIndex(index: number): number | string {
         return index;
     }
 
-    trackByPages(index: number): number | string {
-        return index;
-    }
-
-    openDialog(type: 'assetDetails' | 'emit' | 'burn' | 'update'): void {
+    openDialog(type: 'assetDetails' | 'emit' | 'burn' | 'update', asset_info: AssetInfo): void {
         const config: MatDialogConfig = {
             data: {
-                asset_info: this.currentAssetInfo,
+                asset_info,
             },
         };
 
-        let closed: Observable<number | undefined>;
-
-        switch (type) {
-            case 'assetDetails': {
-                this._matDialog.open(AssetDetailsComponent, config);
-                return;
-            }
-            case 'emit': {
-                closed = this._matDialog
-                    .open<EmitCustomAssetComponent, any, number | undefined>(EmitCustomAssetComponent, config)
-                    .afterClosed();
-                break;
-            }
-            case 'burn': {
-                closed = this._matDialog
-                    .open<BurnCustomAssetComponent, any, number | undefined>(BurnCustomAssetComponent, config)
-                    .afterClosed();
-                break;
-            }
-            case 'update': {
-                closed = this._matDialog
-                    .open<UpdateCustomAssetComponent, any, number | undefined>(UpdateCustomAssetComponent, config)
-                    .afterClosed();
-                break;
-            }
+        if (type === 'assetDetails') {
+            this._matDialog.open(AssetDetailsComponent, config);
+            return;
         }
 
-        closed
+        const componentMap = {
+            emit: EmitCustomAssetComponent,
+            burn: BurnCustomAssetComponent,
+            update: UpdateCustomAssetComponent,
+        };
+
+        this._matDialog
+            .open(componentMap[type] as any, config)
+            .afterClosed()
             .pipe(
-                filter(job_id => typeof job_id === 'number'),
-                switchMap(job_id => {
+                filter((job_id): job_id is number => typeof job_id === 'number'),
+                switchMap((job_id) => {
                     const config2: MatDialogConfig = {
                         data: {
                             job_id,
@@ -133,17 +99,17 @@ export class CustomAssetsComponent implements OnInit {
                         .afterClosed();
                 }),
                 filter(Boolean),
-                take(1)
+                takeUntil(this._destroy$)
             )
             .subscribe({
-                next: () => this._loadAssets(),
+                next: () => this._loadAssetsInfoWhitelist(),
             });
     }
 
-    private _loadAssets(): void {
-        const {
-            currentWallet: { wallet_id },
-        } = this._walletsService;
-        this._walletsService.loadAssetsInfoWhitelist(wallet_id);
+    private _loadAssetsInfoWhitelist(): void {
+        const { currentWallet } = this._walletsService;
+        if (currentWallet) {
+            this._walletsService.loadAssetsInfoWhitelist(currentWallet);
+        }
     }
 }

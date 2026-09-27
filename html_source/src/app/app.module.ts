@@ -18,10 +18,10 @@ import { FormsModule } from '@angular/forms';
 import { RegisterContextTemplatesComponent } from '@parts/components/register-context-templates.component';
 import { DEFAULT_DIALOG_CONFIG, DialogConfig } from '@angular/cdk/dialog';
 import { MatIconRegistry } from '@angular/material/icon';
-import { materialPdcIcons } from '../assets/material-pdc-icons';
+import { svgIcons } from '../assets/pdc-icons';
 import { MAT_DIALOG_DEFAULT_OPTIONS, MatDialogConfig, MatDialogModule } from '@angular/material/dialog';
 
-export function highchartsFactory(): any[] {
+function highchartsFactory(): any[] {
     highcharts.setOptions({
         time: {
             useUTC: false,
@@ -31,19 +31,19 @@ export function highchartsFactory(): any[] {
     return [exporting];
 }
 
-export const provideHighchartsFactory = {
+const provideHighchartsFactory = {
     provide: HIGHCHARTS_MODULES,
     useFactory: highchartsFactory,
 };
 
-export function HttpLoaderFactory(httpClient: HttpClient): TranslateHttpLoader {
+function httpLoaderFactory(httpClient: HttpClient): TranslateHttpLoader {
     return new TranslateHttpLoader(httpClient, './assets/i18n/', '.json');
 }
 
 const translateModuleConfig: TranslateModuleConfig = {
     loader: {
         provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
+        useFactory: httpLoaderFactory,
         deps: [HttpClient],
     },
 };
@@ -87,12 +87,9 @@ const providerMatDialog: Provider = {
         FormsModule,
         MatDialogModule,
         RegisterContextTemplatesComponent,
+        TranslateModule,
     ],
-    providers: [
-        provideHighchartsFactory,
-        provideDialog,
-        providerMatDialog,
-    ],
+    providers: [provideHighchartsFactory, provideDialog, providerMatDialog],
     bootstrap: [AppComponent],
 })
 export class AppModule {
@@ -101,15 +98,12 @@ export class AppModule {
     private _sanitizer: DomSanitizer = inject(DomSanitizer);
 
     constructor() {
-        this._registerIcons(materialPdcIcons);
+        this._registerIcons(svgIcons);
     }
 
-    private _registerIcons(icons: Array<string>): void {
-        icons.forEach((icon: string) => {
-            this._matIconRegistry.addSvgIcon(
-                icon,
-                this._sanitizer.bypassSecurityTrustResourceUrl(`assets/material-pdc-icons/${icon}.svg`)
-            );
+    private _registerIcons(arr: Array<string>): void {
+        arr.forEach((iconName: string) => {
+            this._matIconRegistry.addSvgIcon(iconName, this._sanitizer.bypassSecurityTrustResourceUrl(`assets/pdc-icons/${iconName}.svg`));
         });
     }
 }

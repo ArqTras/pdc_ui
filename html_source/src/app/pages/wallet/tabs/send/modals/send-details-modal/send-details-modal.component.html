@@ -1,6 +1,6 @@
-<div class="send-details-modal-wrapper" fxFlex="0 1 54rem">
+<div role="dialog" aria-modal="true" aria-labelledby="send-details-title" class="send-details-modal-wrapper" fxFlex="0 1 54rem">
     <div class="wrapper w-100" fxFlex fxLayout="column">
-        <h3 class="title mb-2" fxFlex="0 0 auto">
+        <h3 class="title mb-2" fxFlex="0 0 auto" id="send-details-title">
             {{ 'SEND_DETAILS_MODAL.TITLE1' | translate }}
         </h3>
 
@@ -16,7 +16,7 @@
 
                 <div *ngIf="!isSentSuccess && !isSentFailed" class="loader"></div>
 
-                <p class="color-primary mt-2" *ngIf="currentActionState$ | async as currentActionState">
+                <p class="color-primary mt-2 mb-0_5" *ngIf="currentActionState$ | async as currentActionState">
                     {{
                         (currentActionState ? 'TOR_LIB_STATE' + '.' + currentActionState.status : 'TOR_LIB_STATE.STATE_INITIALIZING')
                             | translate
@@ -42,6 +42,8 @@
                     class="header overflow-hidden py-1 px-2 w-100 cursor-pointer"
                     fxLayout="row"
                     fxLayoutAlign="space-between center"
+                    [attr.aria-expanded]="stateDetails$ | async"
+                    [attr.aria-controls]="'details-list'"
                 >
                     <p class="title text-ellipsis mr-2">
                         {{ 'SEND_DETAILS_MODAL.TITLE2' | translate }}
@@ -49,6 +51,7 @@
                     <button *ngIf="isDetailsNotEmpty" fxLayout="row" fxLayoutAlign="center center">
                         <mat-icon
                             svgIcon="pdc-dropdown-arrow-down"
+                            aria-hidden="true"
                             [ngClass]="{
                                 'rotate-180': stateDetails$ | async
                             }"
@@ -63,7 +66,7 @@
                     fxFlex="1 1 auto"
                     fxLayout="row"
                 >
-                    <ul #elDetailsList class="details-list scrolled-content">
+                    <ul role="list" #elDetailsList id="details-list" class="details-list scrolled-content">
                         <li
                             *ngFor="let action of currentActionStates$ | async; let last = last; trackBy: trackBy"
                             class="item mb-1 color-primary"
@@ -99,8 +102,7 @@
 
                         <ng-container *ngIf="responseData$ | async as data">
                             <li class="item mb-1 color-primary" fxLayout="row nowrap" fxLayoutAlign=" center">
-                                <span class="word-break-break-all cursor-pointer"
-                                      (click)="openInBrowser(data.response_data.tx_hash)">
+                                <span class="word-break-break-all cursor-pointer" (click)="openInBrowser(data.response_data.tx_hash)">
                                     tx id: {{ data.response_data.tx_hash || '---' }}
                                 </span>
                                 <app-copy-button *ngIf="data.response_data.tx_hash" [value]="data.response_data.tx_hash" class="ml-1">
@@ -130,7 +132,7 @@
             </div>
         </div>
         <div class="controls" fxFlex="0 0 auto">
-            <button (click)="eventClose.emit(success)" [disabled]="!isSentSuccess && !isSentFailed" class="primary big w-100">
+            <button (click)="event_close.emit(success)" [disabled]="!isSentSuccess && !isSentFailed" class="primary big w-100">
                 {{ 'Ok' | translate }}
             </button>
         </div>
@@ -138,13 +140,17 @@
 </div>
 
 <ng-template #errorCodesTemplate let-prefix="prefix" let-error_code="error_code">
-    <ng-container [ngSwitch]="error_code">
+    <ng-container [ngSwitch]="error_code | extractErrorCode">
         <ng-container *ngSwitchCase="'NOT_ENOUGH_MONEY'">
-            <p class="color-red">{{ prefix }} {{ 'SEND.ERROR_CODES' + '.' + error_code | translate }}</p>
+            <p class="color-red word-break-break-all">
+                {{ 'MODALS.ERROR' | translate }}: {{ 'SEND.ERROR_CODES.' + (error_code | extractErrorCode) | translate }}
+            </p>
         </ng-container>
         <ng-container *ngSwitchCase="'OK'"></ng-container>
         <ng-container *ngSwitchDefault>
-            <p class="color-red">{{ prefix }} {{ error_code }}</p>
+            <p class="color-red word-break-break-all">
+                {{ 'MODALS.ERROR' | translate }}: {{ 'ERRORS.' + (error_code | extractErrorCode) | translate }}
+            </p>
         </ng-container>
     </ng-container>
 </ng-template>

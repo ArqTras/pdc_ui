@@ -1,53 +1,65 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subtransfer, Subtransfers, Transaction } from '@api/models/transaction.model';
-import { pdcAssetInfo } from '@parts/data/assets';
+import { Subtransfer, Transaction } from '@api/models/transaction.model';
+import { PDC_ASSET_INFO } from '@parts/data/pdc-assets-info';
 import { isFinalizator, isInitiator, isSwapTransaction } from '@parts/functions/identify-transaction';
 import { VariablesService } from '@parts/services/variables.service';
-import { TooltipModule } from '@parts/directives';
+import { TooltipDirective } from '@parts/directives';
 import { TranslateModule } from '@ngx-translate/core';
 import { FlexModule } from '@angular/flex-layout';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-transaction-status',
     standalone: true,
-    imports: [CommonModule, TooltipModule, TranslateModule, FlexModule],
+    imports: [CommonModule, TooltipDirective, TranslateModule, FlexModule, MatTooltipModule],
     templateUrl: './transaction-status.component.html',
     styleUrls: ['./transaction-status.component.scss'],
 })
-export class TransactionStatusComponent {
+export class TransactionStatusComponent implements OnInit {
     @Input() transaction: Transaction;
+
+    allSubtransfers: Subtransfer[] = [];
 
     constructor(public variablesService: VariablesService) {}
 
+    ngOnInit(): void {
+        if (this.transaction.subtransfers_by_pid) {
+            for (const group of this.transaction.subtransfers_by_pid) {
+                this.allSubtransfers.push(...group.subtransfers);
+            }
+        }
+    }
+
     isVisibleStatusBySubtransfer(subtransfer: Subtransfer, transaction: Transaction): boolean {
         const { amount, asset_id, is_income } = subtransfer;
-        const { fee, subtransfers } = transaction;
+        const { fee } = transaction;
 
-        if (subtransfers.length === 1 && asset_id === pdcAssetInfo.asset_id && is_income === false && amount.eq(fee)) {
+        if (this.allSubtransfers.length === 1 && asset_id === PDC_ASSET_INFO.asset_id && is_income === false && amount.eq(fee)) {
             return true;
         }
 
-        if (asset_id === pdcAssetInfo.asset_id && isSwapTransaction(transaction) && isFinalizator(transaction)) {
+        if (asset_id === PDC_ASSET_INFO.asset_id && isSwapTransaction(transaction) && isFinalizator(transaction)) {
             return true;
         }
 
-        return !(asset_id === pdcAssetInfo.asset_id && is_income === false && amount.eq(fee));
+        return !(asset_id === PDC_ASSET_INFO.asset_id && is_income === false && amount.eq(fee));
     }
 
     isIncome(subtransfer: Subtransfer, transaction: Transaction): boolean {
         const { amount, asset_id, is_income } = subtransfer;
         const { fee } = transaction;
 
-        // Case: When the amount is less than the fee
-        const condition1 = asset_id === pdcAssetInfo.asset_id;
-        const condition2 = amount.isLessThan(fee);
-        const condition3 = !is_income;
-
-        if (condition1 && condition2 && condition3) {
-            return true;
+        if (isInitiator(transaction)) {
+            // Case: When the amount is less than the fee
+            const condition1 = asset_id === PDC_ASSET_INFO.asset_id;
+            const condition2 = amount.isLessThan(fee);
+            const condition3 = !is_income;
+            if (condition1 && condition2 && condition3) {
+                return true;
+            }
+            // ---------------------------------------------
         }
-        // ---------------------------------------------
 
         return is_income;
     }
@@ -92,8 +104,8 @@ export class TransactionStatusComponent {
         return now + (item.unlock_time - this.variablesService.height_max) * 60 * 1000;
     }
 
-    hasPdc(subtransfers: Subtransfers): boolean {
-        return Boolean(subtransfers.find(({ asset_id }) => asset_id === pdcAssetInfo.asset_id));
+    hasPdc(): boolean {
+        return this.allSubtransfers.some(({ asset_id }) => asset_id === PDC_ASSET_INFO.asset_id);
     }
 
     isInitiator(transaction: Transaction): boolean {

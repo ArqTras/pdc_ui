@@ -1,52 +1,135 @@
 import { Contracts } from './contract.model';
 import { Transaction, Transactions } from './transaction.model';
 import { BigNumber } from 'bignumber.js';
-import { AssetBalance, AssetBalances, AssetInfo, AssetsInfoWhitelist, VerifiedAssetInfoWhitelist } from './assets.model';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { Alias } from '@api/models/alias.model';
-import { SendMoneyFormParams } from '@api/models/send-money.model';
-import { defaultAssetLogoSrc, pdcAssetInfo } from '@parts/data/assets';
+import {
+    AssetBalance,
+    AssetBalances,
+    AssetInfo,
+    AssetsInfoWhitelist,
+    LocalBlacklistVerifiedAssets,
+    VerifiedAssetInfoWhitelist,
+} from './assets.model';
+import { BehaviorSubject, combineLatest, Subscription } from 'rxjs';
+import { AliasInfo, AliasInfoList } from '@api/models/alias.model';
+import { PDC_ASSET_INFO } from '@parts/data/pdc-assets-info';
 import { map } from 'rxjs/operators';
+import { DEFAULT_ASSET_LOGO_SRC } from '@parts/data/constants';
+import { CurrentPriceForAssets } from '@api/models/api-pdc.models';
+import { getFiatValue } from '@parts/functions/get-fiat-value';
+import { TransferFormValue } from '../../pages/wallet/tabs/send/send.component';
 
-export const defaultAssetsInfoWhitelist = { global_whitelist: [], local_whitelist: [], own_assets: [] };
+export const DEFAULT_ASSETS_INFO_WHITELIST: AssetsInfoWhitelist = { global_whitelist: [], local_whitelist: [], own_assets: [] };
 
-export const defaultVerificationAssetsInfoWhitelist = [];
+const DEFAULT_BALANCES: AssetBalances = [
+    {
+        asset_info: PDC_ASSET_INFO,
+        awaiting_in: 0,
+        awaiting_out: 0,
+        total: 0,
+        unlocked: 0,
+    },
+];
 
-const sortBalances = (value: AssetBalances | null | undefined): AssetBalances => {
-    const sortedBalances: AssetBalances = [];
-    if (value) {
-        const assets = [...value];
-        const indexPdc = assets.findIndex(({ asset_info: { ticker } }) => ticker === 'PDC');
-        if (indexPdc >= 0) {
-            const assetPdc = assets.splice(indexPdc, 1)[0];
-            sortedBalances.push(assetPdc);
-        }
-        const sortedAssetsByBalance = assets.sort((a, b) => new BigNumber(b.total).minus(new BigNumber(a.total)).toNumber());
-        sortedBalances.push(...sortedAssetsByBalance);
-    }
-    return sortedBalances;
+const sortBalances = (
+    value: AssetBalances | null | undefined,
+    verifiedAssetInfoWhitelist: VerifiedAssetInfoWhitelist,
+    currentPriceForAssets: CurrentPriceForAssets,
+    walletSettings: WalletSettings,
+    currency = 'usd'
+): AssetBalances => {
+    if (!value?.length) return [];
+
+    const verifiedIds: Set<string> = new Set(verifiedAssetInfoWhitelist.map((v) => v.asset_id));
+
+    const filtered: AssetBalances = walletSettings.hideEmptyAssets
+        ? value.filter(({ asset_info: { asset_id }, total }) => asset_id === PDC_ASSET_INFO.asset_id || total > 0)
+        : value;
+
+    const prepared = filtered.map((balance) => {
+        const fiatValue = getFiatValue(balance, currentPriceForAssets, currency);
+        const fiatBn = fiatValue === null ? new BigNumber(0) : new BigNumber(fiatValue);
+        const fiat = fiatBn.isFinite() && !fiatBn.isNaN() ? fiatBn : new BigNumber(0);
+
+        const totalBn = new BigNumber(balance.total ?? 0);
+        const total = totalBn.isFinite() && !totalBn.isNaN() ? totalBn : new BigNumber(0);
+
+        return {
+            balance,
+            isPdc: balance.asset_info.asset_id === PDC_ASSET_INFO.asset_id,
+            isVerified: verifiedIds.has(balance.asset_info.asset_id),
+            fiat,
+            total,
+            ticker: balance.asset_info?.ticker ?? '',
+        };
+    });
+
+    prepared.sort((a, b) => {
+        if (a.isPdc !== b.isPdc) return a.isPdc ? -1 : 1;
+        if (a.isVerified !== b.isVerified) return a.isVerified ? -1 : 1;
+
+        const byFiat = b.fiat.comparedTo(a.fiat);
+        if (byFiat !== 0) return byFiat;
+
+        const byTotal = b.total.comparedTo(a.total);
+        if (byTotal !== 0) return byTotal;
+
+        return a.ticker.localeCompare(b.ticker);
+    });
+
+    return prepared.map((x) => x.balance);
 };
 
 const prepareBalances = (
-    value: [AssetBalances, AssetsInfoWhitelist, VerifiedAssetInfoWhitelist]
+    value: [
+        AssetBalances,
+        AssetsInfoWhitelist,
+        VerifiedAssetInfoWhitelist,
+        LocalBlacklistVerifiedAssets,
+        CurrentPriceForAssets,
+        WalletSettings
+    ]
 ): AssetBalances => {
-    const [assetBalances, assetInfoWhitelist, verifiedAssetInfoWhitelist] = value;
-
-    const items: AssetBalances = [...assetBalances];
+    const [
+        assetBalances,
+        assetInfoWhitelist,
+        verifiedAssetInfoWhitelist,
+        localBlacklistVerifiedAssets,
+        currentPriceForAssets,
+        walletSettings,
+    ] = value;
 
     const ensureLogoAndPriceUrl = (asset_info: AssetInfo): AssetInfo => ({
         ...asset_info,
-        logo: asset_info.logo || (asset_info.asset_id === pdcAssetInfo.asset_id ? pdcAssetInfo.logo : defaultAssetLogoSrc),
-        price_url: asset_info.price_url || (asset_info.asset_id === pdcAssetInfo.asset_id ? pdcAssetInfo.price_url : ''),
+        logo: asset_info.logo || (asset_info.asset_id === PDC_ASSET_INFO.asset_id ? PDC_ASSET_INFO.logo : DEFAULT_ASSET_LOGO_SRC),
+        price_url: asset_info.price_url || (asset_info.asset_id === PDC_ASSET_INFO.asset_id ? PDC_ASSET_INFO.price_url : ''),
     });
 
-    for (const asset_info of verifiedAssetInfoWhitelist) {
-        const assetBalance = items.find(i => i.asset_info.asset_id === asset_info.asset_id);
+    // Build map for O(1) updates by asset_id
+    const byId = new Map<string, AssetBalance>(
+        (assetBalances ?? []).map((b) => [
+            b.asset_info.asset_id,
+            {
+                ...b,
+                asset_info: ensureLogoAndPriceUrl(b.asset_info),
+            },
+        ])
+    );
 
-        if (assetBalance) {
-            assetBalance.asset_info = { ...assetBalance.asset_info, ...ensureLogoAndPriceUrl(asset_info) };
+    // Verified whitelist: ensure asset exists; verified metadata overrides
+    for (const asset_info of verifiedAssetInfoWhitelist) {
+        const id = asset_info.asset_id;
+        const existing = byId.get(id);
+
+        if (existing) {
+            byId.set(id, {
+                ...existing,
+                asset_info: {
+                    ...existing.asset_info,
+                    ...ensureLogoAndPriceUrl(asset_info),
+                },
+            });
         } else {
-            items.push({
+            byId.set(id, {
                 asset_info: ensureLogoAndPriceUrl(asset_info),
                 awaiting_in: 0,
                 awaiting_out: 0,
@@ -56,26 +139,44 @@ const prepareBalances = (
         }
     }
 
+    // Whitelists: enrich existing balances' metadata (do not create new rows here)
     const { global_whitelist, local_whitelist, own_assets } = assetInfoWhitelist;
     const allWhitelistedAssets = [...global_whitelist, ...local_whitelist, ...own_assets];
 
     for (const asset_info of allWhitelistedAssets) {
-        const assetBalance = items.find(i => i.asset_info.asset_id === asset_info.asset_id);
+        const id = asset_info.asset_id;
+        const existing = byId.get(id);
+        if (!existing) continue;
 
-        if (assetBalance) {
-            assetBalance.asset_info = { ...ensureLogoAndPriceUrl(asset_info), ...assetBalance.asset_info };
-        }
+        byId.set(id, {
+            ...existing,
+            asset_info: {
+                ...ensureLogoAndPriceUrl(asset_info),
+                ...existing.asset_info,
+            },
+        });
     }
 
-    for (const assetBalance of items) {
-        assetBalance.asset_info = ensureLogoAndPriceUrl(assetBalance.asset_info);
-    }
+    const blacklist = new Set(localBlacklistVerifiedAssets ?? []);
+    const items = Array.from(byId.values()).filter(({ asset_info }) => !blacklist.has(asset_info.asset_id));
 
-    return items;
+    return sortBalances(items, verifiedAssetInfoWhitelist, currentPriceForAssets, walletSettings);
 };
 
+export interface WalletSettings {
+    balanceDisplayMode: 'pdc' | 'fiat';
+    hideEmptyAssets: boolean;
+}
+
 export class Wallet {
-    open_from_exist: boolean;
+    settings: WalletSettings = {
+        balanceDisplayMode: 'fiat',
+        hideEmptyAssets: false,
+    };
+
+    readonly settingsChanged$ = new BehaviorSubject<WalletSettings>(this.settings);
+
+    open_from_exist!: boolean;
 
     updated = false;
 
@@ -89,7 +190,7 @@ export class Wallet {
 
     address: string;
 
-    assetsInfoWhitelist: AssetsInfoWhitelist = defaultAssetsInfoWhitelist;
+    assetsInfoWhitelist: AssetsInfoWhitelist = DEFAULT_ASSETS_INFO_WHITELIST;
 
     get allAssetsInfoWhitelist(): AssetInfo[] {
         const { global_whitelist = [], local_whitelist = [], own_assets = [] } = this.assetsInfoWhitelist;
@@ -97,44 +198,54 @@ export class Wallet {
     }
 
     get allAssetsInfo(): AssetInfo[] {
-        return [pdcAssetInfo, ...this.allAssetsInfoWhitelist];
+        return [PDC_ASSET_INFO, ...this.allAssetsInfoWhitelist];
     }
 
-    originalBalances$: BehaviorSubject<AssetBalances> = new BehaviorSubject<AssetBalances>([]);
+    readonly originalBalances$ = new BehaviorSubject<AssetBalances>([]);
 
-    assetsInfoWhitelist$: BehaviorSubject<AssetsInfoWhitelist> = new BehaviorSubject(defaultAssetsInfoWhitelist);
+    readonly assetsInfoWhitelist$ = new BehaviorSubject<AssetsInfoWhitelist>(DEFAULT_ASSETS_INFO_WHITELIST);
 
-    verificationAssetsInfoWhitelist$: BehaviorSubject<VerifiedAssetInfoWhitelist> = new BehaviorSubject<VerifiedAssetInfoWhitelist>(
-        defaultVerificationAssetsInfoWhitelist
-    );
+    readonly verificationAssetsInfoWhitelist$ = new BehaviorSubject<VerifiedAssetInfoWhitelist>([]);
 
-    balances$: BehaviorSubject<AssetBalances> = new BehaviorSubject([]);
+    readonly localBlacklistVerifiedAssets$ = new BehaviorSubject<LocalBlacklistVerifiedAssets>([]);
+
+    readonly currentPriceForAssets$ = new BehaviorSubject<CurrentPriceForAssets>({});
+
+    readonly balances$ = new BehaviorSubject<AssetBalances>([]);
+
+    private readonly _balancesSubscription: Subscription;
 
     get balances(): AssetBalances {
         return this.balances$.value;
     }
 
     set balances(value: AssetBalances | null | undefined) {
-        this.originalBalances$.next(value ?? []);
+        this.originalBalances$.next(value?.length ? value : DEFAULT_BALANCES);
     }
 
     mined_total: number;
 
+    current_pos_attempts = 0;
+
+    est_iterations_per_pos_block = 0;
+
     tracking_hey: string;
 
-    is_auditable: boolean;
+    is_auditable!: boolean;
 
-    is_watch_only: boolean;
+    is_watch_only!: boolean;
 
-    exclude_mining_txs: boolean;
+    exclude_mining_txs!: boolean;
 
-    alias_available: boolean;
+    alias_available!: boolean;
 
     has_bare_unspent_outputs = false;
 
-    alias?: Partial<Alias>;
+    get alias_info(): null | AliasInfo {
+        return this.alias_info_list[this.alias_info_list.length - 1] ?? null;
+    }
 
-    wakeAlias?: boolean;
+    alias_info_list: AliasInfoList = [];
 
     staking?: boolean;
 
@@ -146,11 +257,11 @@ export class Wallet {
 
     total_history_item?: number;
 
-    pages = [];
+    pages: any[] = [];
 
-    totalPages: number;
+    totalPages!: number;
 
-    currentPage: number;
+    currentPage!: number;
 
     excluded_history: Transactions = [];
 
@@ -162,9 +273,21 @@ export class Wallet {
 
     restore?: boolean;
 
-    sendMoneyParams: SendMoneyFormParams | null = null;
+    first_sync_stored?: boolean;
 
-    constructor(id, name, pass, path, address, balances, unlocked_balance, mined = 0, tracking = '') {
+    transfer_form_value: TransferFormValue | null = null;
+
+    constructor(
+        id: number,
+        name: string,
+        pass: string,
+        path: string,
+        address: string,
+        balances: AssetBalances | null | undefined,
+        unlocked_balance: number,
+        mined = 0,
+        tracking = ''
+    ) {
         this.wallet_id = id;
         this.name = name;
         this.pass = pass;
@@ -172,9 +295,9 @@ export class Wallet {
         this.address = address;
         this.balances = balances;
         this.mined_total = mined;
+        this.current_pos_attempts = 0;
+        this.est_iterations_per_pos_block = 0;
         this.tracking_hey = tracking;
-
-        this.alias = {};
         this.staking = false;
         this.new_messages = 0;
         this.new_contracts = 0;
@@ -184,16 +307,26 @@ export class Wallet {
 
         this.progress = 0;
         this.loaded = false;
+        this.first_sync_stored = false;
 
-        combineLatest([
-            this.originalBalances$.pipe(map(sortBalances)),
+        this._balancesSubscription = combineLatest([
+            this.originalBalances$,
             this.assetsInfoWhitelist$,
             this.verificationAssetsInfoWhitelist$,
-        ]).pipe(map(prepareBalances)).subscribe({
-            next: (value) => {
-                this.balances$.next(value);
-            }
-        });
+            this.localBlacklistVerifiedAssets$,
+            this.currentPriceForAssets$,
+            this.settingsChanged$,
+        ])
+            .pipe(map(prepareBalances))
+            .subscribe({
+                next: (value) => {
+                    this.balances$.next(value);
+                },
+            });
+    }
+
+    destroy(): void {
+        this._balancesSubscription.unsubscribe();
     }
 
     getBalanceByAssetId(value: string): AssetBalance | undefined {
@@ -208,46 +341,41 @@ export class Wallet {
         return this.balances.find(({ asset_info: { ticker } }) => ticker === searchTicker);
     }
 
-    getMoneyEquivalentForPdc(equivalent): string {
-        const balancePdc = this.getBalanceByTicker('PDC')?.total || 0;
-        return new BigNumber(balancePdc).multipliedBy(equivalent).toFixed(0);
-    }
-
     prepareHistory(items: Transaction[]): void {
         for (let i = 0; i < items.length; i++) {
-            if (
-                (items[i].tx_type === 7 && items[i].subtransfers?.find(({ is_income }) => is_income)) ||
-                (items[i].tx_type === 11 && items[i].subtransfers?.find(({ is_income }) => is_income))
-            ) {
+            const tx = items[i];
+            const hasIncoming = tx.subtransfers_by_pid?.some((g) => g.subtransfers.some((s) => s.is_income));
+
+            if ((tx.tx_type === 7 || tx.tx_type === 11) && hasIncoming) {
                 let exists = false;
                 for (let j = 0; j < this.excluded_history.length; j++) {
-                    if (this.excluded_history[j].tx_hash === items[i].tx_hash) {
+                    if (this.excluded_history[j].tx_hash === tx.tx_hash) {
                         exists = true;
-                        if (this.excluded_history[j].height !== items[i].height) {
-                            this.excluded_history[j] = items[i];
+                        if (this.excluded_history[j].height !== tx.height) {
+                            this.excluded_history[j] = tx;
                         }
                         break;
                     }
                 }
                 if (!exists) {
-                    this.excluded_history.push(items[i]);
+                    this.excluded_history.push(tx);
                 }
             } else {
                 let exists = false;
                 for (let j = 0; j < this.history.length; j++) {
-                    if (this.history[j].tx_hash === items[i].tx_hash) {
+                    if (this.history[j].tx_hash === tx.tx_hash) {
                         exists = true;
-                        if (this.history[j].height !== items[i].height) {
-                            this.history[j] = items[i];
+                        if (this.history[j].height !== tx.height) {
+                            this.history[j] = tx;
                         }
                         break;
                     }
                 }
                 if (!exists) {
-                    if (this.history.length > 0 && items[i].timestamp >= this.history[0].timestamp) {
-                        this.history.unshift(items[i]);
+                    if (this.history.length > 0 && tx.timestamp >= this.history[0].timestamp) {
+                        this.history.unshift(tx);
                     } else {
-                        this.history.push(items[i]);
+                        this.history.push(tx);
                     }
                 }
             }
@@ -262,56 +390,24 @@ export class Wallet {
             }
         }
     }
-}
 
-export interface DeeplinkParams {
-    action?: 'send' | string;
-    address?: string;
-    amount?: string;
-    my_deposit?: string;
-    seller_deposit?: string;
-    seller_address?: string;
-    hide_sender?: string;
-    hide_receiver?: string;
-    title?: string;
-    description?: string;
-    category?: string;
-    price?: string;
-    img_url?: string;
-    url?: string;
-    contact?: string;
-    comment?: string;
-    comments?: string;
-    mixins?: string;
-    fee?: string;
-}
+    addAssetToLocalBlacklistVerifiedAssets(asset_id: string): void {
+        const blackList: LocalBlacklistVerifiedAssets = [...this.localBlacklistVerifiedAssets$.value, asset_id];
+        this.localBlacklistVerifiedAssets$.next(blackList);
+    }
 
-export interface PushOffer {
-    wallet_id: number;
-    od: {
-        ap: string;
-        at: string;
-        cat: string;
-        cnt: string;
-        com: string;
-        do: string;
-        et: number;
-        fee: BigNumber;
-        lci: string;
-        lco: string;
-        ot: number;
-        pt: string;
-        t: string;
-        url: string;
-    };
-}
+    removeAssetFromLocalBlacklistVerifiedAssets(asset_id: string): void {
+        const blackList: LocalBlacklistVerifiedAssets = this.localBlacklistVerifiedAssets$.value.filter((v) => v !== asset_id);
+        this.localBlacklistVerifiedAssets$.next(blackList);
+    }
 
-export interface ResponseGetWalletInfo {
-    address: string;
-    balances: AssetBalances;
-    is_auditable: boolean;
-    is_watch_only: boolean;
-    mined_total: number;
-    path: string;
-    view_sec_key: string;
+    setHideEmptyAssets(value: boolean): void {
+        if (this.settings.hideEmptyAssets === value) return;
+
+        this.settings = {
+            ...this.settings,
+            hideEmptyAssets: value,
+        };
+        this.settingsChanged$.next(this.settings);
+    }
 }

@@ -4,7 +4,7 @@ import { NonNullableFormBuilder, ValidationErrors, Validators } from '@angular/f
 import { AssetInfo } from '@api/models/assets.model';
 import { BackendService } from '@api/services/backend.service';
 import { UpdateAssetParams } from '@api/models/custom-asstest.model';
-import { regExpHex } from '@parts/utils/pdc-validators';
+import { REG_EXP_HEX } from '@parts/utils/pdc-validators';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
@@ -24,7 +24,7 @@ export class UpdateCustomAssetComponent {
             Validators.required,
             (control): ValidationErrors | null => {
                 if (control.value.length === 64) {
-                    if (!regExpHex.test(control.value)) {
+                    if (!REG_EXP_HEX.test(control.value)) {
                         return { hex_not_valid: true };
                     } else {
                         return null;
@@ -32,7 +32,7 @@ export class UpdateCustomAssetComponent {
                 }
 
                 if (control.value) {
-                    this._backendService.validateAddress(control.value, (status, data) => {
+                    this._backendService.validateAddress(control.value, (status) => {
                         this._ngZone.run(() => {
                             if (status === false) {
                                 control.setErrors(Object.assign({ address_not_valid: true }, control.errors));
@@ -55,7 +55,7 @@ export class UpdateCustomAssetComponent {
     });
 
     public submit(): void {
-        const { wallet_id } = this.variablesService.currentWallet;
+        const { wallet_id } = this.variablesService.current_wallet;
         const { asset_id } = this.data.asset_info;
         const { owner } = this.form.getRawValue();
         const params: UpdateAssetParams = {
@@ -74,7 +74,7 @@ export class UpdateCustomAssetComponent {
                 method: 'update_asset',
                 params,
             },
-            async (job_id: number): Promise<void> => {
+            (job_id: number) => {
                 this._ngZone.run(() => {
                     this.matDialogRef.close(job_id);
                 });

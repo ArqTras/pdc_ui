@@ -22,14 +22,14 @@ export class PdcLoadersService {
     });
 
     getState(id: TLoaderId): Observable<boolean> {
-        return this._loaders$.pipe(map(loader => loader[id].state));
+        return this._loaders$.pipe(map((loader) => loader[id].state));
     }
 
     getMessage(id: TLoaderId): Observable<string> {
-        return this._loaders$.pipe(map(loader => loader[id].message));
+        return this._loaders$.pipe(map((loader) => loader[id].message));
     }
 
-    open(id: TLoaderId, message: string = 'Loading'): void {
+    open(id: TLoaderId, message = 'Loading'): void {
         this._loaders$.next({
             ...this._loaders$.value,
             [id]: {

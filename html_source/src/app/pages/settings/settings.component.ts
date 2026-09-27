@@ -1,28 +1,52 @@
-import { Component, inject, NgZone, OnInit, Renderer2 } from '@angular/core';
+import { Component, inject, NgZone, OnDestroy, OnInit, Renderer2, TemplateRef, ViewChild } from '@angular/core';
 import { VariablesService } from '@parts/services/variables.service';
 import { BackendService } from '@api/services/backend.service';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
-import { scaleItems } from '@parts/data/scale-items';
-import { regExpPassword, PdcValidators } from '@parts/utils/pdc-validators';
+import { REG_EXP_PASSWORD, PdcValidators } from '@parts/utils/pdc-validators';
 import { generateRandomString } from '@parts/utils/generate-random-string';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { currenciesItems } from '@parts/data/currencies';
+import { AppLogItems } from '@parts/interfaces/app-log-items.interface';
+import { AppScaleItems } from '@parts/interfaces/app-scale-items.interface';
 
 @Component({
     selector: 'app-settings',
     templateUrl: './settings.component.html',
     styleUrls: [`./settings.component.scss`],
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
+    @ViewChild('clearLogsDialog') private clearLogsDialog: TemplateRef<unknown>;
+
+    logFilesSize: number | null = null;
+
+    isLogSizeLoading = false;
+
+    isClearingLogs = false;
+
+    isClearLogsConfirmationOpen = false;
+
+    logClearResult: 'error' | null = null;
+
+    private readonly destroy$ = new Subject<void>();
+
+    private clearLogsDialogRef: MatDialogRef<unknown, boolean> | undefined;
+
     ifSaved = false;
 
-    isSecretWasCopied: boolean = false;
+    isMasterPasswordSaving = false;
 
-    secretWasCopiedTimeout;
+    masterPasswordSaveError = false;
 
-    isBuildVersionWasCopied: boolean = false;
+    isSecretWasCopied = false;
 
-    buildVersionWasCopiedTimeout;
+    secretWasCopiedTimeout: any;
+
+    isBuildVersionWasCopied = false;
+
+    buildVersionWasCopiedTimeout: any;
 
     scale: string;
 
@@ -32,8 +56,9 @@ export class SettingsComponent implements OnInit {
 
     changeForm = this.fb.group(
         {
-            password: this.fb.nonNullable.control('', Validators.compose([Validators.pattern(regExpPassword)])),
-            new_password: this.fb.nonNullable.control('', Validators.compose([Validators.pattern(regExpPassword)])),
+            // Existing passwords only need to match; creation rules may have changed since they were set.
+            password: this.fb.nonNullable.control(''),
+            new_password: this.fb.nonNullable.control('', [Validators.required, Validators.pattern(REG_EXP_PASSWORD)]),
             new_confirmation: this.fb.nonNullable.control(''),
             appPass: this.fb.nonNullable.control(this.variablesService.appPass ?? ''),
         },
@@ -45,11 +70,11 @@ export class SettingsComponent implements OnInit {
         }
     );
 
-    pdcCompanionForm: FormGroup<{
-        pdcCompation: FormControl<boolean>;
+    zanoCompanionForm: FormGroup<{
+        zanoCompation: FormControl<boolean>;
         secret: FormControl<string>;
     }> = this.fb.group({
-        pdcCompation: this.fb.nonNullable.control({ value: false, disabled: !this.variablesService.hasAppPass }),
+        zanoCompation: this.fb.nonNullable.control({ value: false, disabled: !this.variablesService.hasAppPass }),
         secret: this.fb.nonNullable.control(
             { value: '', disabled: false },
             {
@@ -106,30 +131,53 @@ export class SettingsComponent implements OnInit {
         },
     ];
 
-    appScaleOptions = scaleItems;
-
-    appLogOptions = [
+    appScaleOptions: AppScaleItems = [
         {
-            id: -1,
+            value: '8px',
+            label: 'SETTINGS.SCALE.75',
         },
         {
-            id: 0,
+            value: '10px',
+            label: 'SETTINGS.SCALE.100',
         },
         {
-            id: 1,
+            value: '12px',
+            label: 'SETTINGS.SCALE.125',
         },
         {
-            id: 2,
-        },
-        {
-            id: 3,
-        },
-        {
-            id: 4,
+            value: '14px',
+            label: 'SETTINGS.SCALE.150',
         },
     ];
 
-    currentBuild = '';
+    appLogItems: AppLogItems = [
+        {
+            id: -1,
+            label: 'LOG_ITEMS.LABEL1',
+        },
+        {
+            id: 0,
+            label: 'LOG_ITEMS.LABEL2',
+        },
+        {
+            id: 1,
+            label: 'LOG_ITEMS.LABEL3',
+        },
+        {
+            id: 2,
+            label: 'LOG_ITEMS.LABEL4',
+        },
+        {
+            id: 3,
+            label: 'LOG_ITEMS.LABEL5',
+            type: 'WARNING',
+        },
+        {
+            id: 4,
+            label: 'LOG_ITEMS.LABEL6',
+            type: 'WARNING',
+        },
+    ];
 
     appPass: any;
 
@@ -138,52 +186,39 @@ export class SettingsComponent implements OnInit {
         public variablesService: VariablesService,
         private renderer: Renderer2,
         public backend: BackendService,
-        private ngZone: NgZone
+        private ngZone: NgZone,
+        private matDialog: MatDialog
     ) {
         this.scale = this.variablesService.settings.scale;
         this.appUseTor = this.variablesService.settings.appUseTor;
-        this.pdcCompanionForm.setValue(this.variablesService.settings.pdcCompanionForm, { emitEvent: false });
+        this.zanoCompanionForm.setValue(this.variablesService.settings.zanoCompanionForm, { emitEvent: false });
 
         this.backend.getOptions();
     }
 
     ngOnInit(): void {
-        this.backend.getVersion((version, type, error) => {
-            this.ngZone.run(() => {
-                if (!error) {
-                    this.currentBuild = version;
-                    this.variablesService.testnet = false;
-                    if (type === 'testnet') {
-                        this.currentBuild += ' TESTNET';
-                        this.variablesService.testnet = true;
-                    }
-                    this.variablesService.networkType = type;
-                } else {
-                    this.currentBuild = 'There was an error getting the build version';
-                }
-            });
-        });
+        this.refreshLogFilesSize();
 
-        this.backend.getIsDisabledNotifications(state => {
+        this.backend.getIsDisabledNotifications((state) => {
             this.currentNotificationsState = !state;
         });
 
-        this.pdcCompanionForm.valueChanges.pipe(debounceTime(200)).subscribe({
+        this.zanoCompanionForm.valueChanges.pipe(debounceTime(200)).subscribe({
             next: () => {
-                const value = this.pdcCompanionForm.getRawValue();
-                const { pdcCompation, secret } = value;
+                const value = this.zanoCompanionForm.getRawValue();
+                const { zanoCompation, secret } = value;
 
-                if (pdcCompation && !secret) {
+                if (zanoCompation && !secret) {
                     this.generateSecret();
                     return;
                 }
 
-                if (!pdcCompation && secret) {
-                    this.pdcCompanionForm.controls.secret.patchValue('');
+                if (!zanoCompation && secret) {
+                    this.zanoCompanionForm.controls.secret.patchValue('');
                     return;
                 }
 
-                if ((pdcCompation && secret) || (!pdcCompation && !secret)) {
+                if ((zanoCompation && secret) || (!zanoCompation && !secret)) {
                     this.backend.setupJwtWalletRpc(value);
                     return;
                 }
@@ -191,8 +226,132 @@ export class SettingsComponent implements OnInit {
         });
     }
 
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+        this.clearLogsDialogRef?.close(false);
+    }
+
+    get formattedLogFilesSize(): string {
+        if (this.logFilesSize === null) {
+            return '';
+        }
+
+        const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
+        let size = this.logFilesSize;
+        let unit = 0;
+
+        while (size >= 1000 && unit < units.length - 1) {
+            size /= 1000;
+            unit++;
+        }
+
+        if (unit > 0) {
+            size = Math.round(size * 10) / 10;
+            // Use the next unit when rounding would otherwise show 1000.0.
+            if (size >= 1000 && unit < units.length - 1) {
+                size /= 1000;
+                unit++;
+            }
+        }
+
+        const value = new Intl.NumberFormat(this.variablesService.settings.language, {
+            minimumFractionDigits: unit === 0 ? 0 : 1,
+            maximumFractionDigits: unit === 0 ? 0 : 1,
+        }).format(size);
+        return `${value} ${units[unit]}`;
+    }
+
+    get canClearLogs(): boolean {
+        return (
+            (this.logFilesSize === null || this.logFilesSize > 0) &&
+            !this.isLogSizeLoading &&
+            !this.isClearingLogs &&
+            !this.isClearLogsConfirmationOpen
+        );
+    }
+
+    refreshLogFilesSize(): void {
+        if (this.isLogSizeLoading || this.isClearingLogs || this.isClearLogsConfirmationOpen) {
+            return;
+        }
+
+        this.isLogSizeLoading = true;
+        this.backend
+            .getLogFilesSize()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (response) => {
+                    this.ngZone.run(() => {
+                        const size = response?.response_data?.total_size;
+                        this.logFilesSize = response?.error_code === 'OK' && Number.isSafeInteger(size) && size >= 0 ? size : null;
+                        this.isLogSizeLoading = false;
+                    });
+                },
+                error: () => {
+                    this.ngZone.run(() => {
+                        this.logFilesSize = null;
+                        this.isLogSizeLoading = false;
+                    });
+                },
+            });
+    }
+
+    confirmClearLogs(): void {
+        if (!this.canClearLogs) {
+            return;
+        }
+
+        this.isClearLogsConfirmationOpen = true;
+        this.clearLogsDialogRef = this.matDialog.open<unknown, unknown, boolean>(this.clearLogsDialog, {
+            width: '42rem',
+            disableClose: false,
+            autoFocus: '#clear-logs-cancel',
+            restoreFocus: true,
+            ariaLabelledBy: 'clear-logs-title',
+            ariaDescribedBy: 'clear-logs-description',
+        });
+        this.clearLogsDialogRef
+            .beforeClosed()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                // Re-enable the trigger before Material restores focus to it.
+                this.isClearLogsConfirmationOpen = false;
+            });
+        this.clearLogsDialogRef
+            .afterClosed()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((confirmed) => {
+                this.clearLogsDialogRef = undefined;
+                if (confirmed) {
+                    this.clearLogs();
+                }
+            });
+    }
+
+    private clearLogs(): void {
+        this.isClearingLogs = true;
+        this.logClearResult = null;
+        this.backend
+            .clearLogFiles()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (response) => this.finishClearingLogs(response?.error_code === 'OK'),
+                error: () => this.finishClearingLogs(false),
+            });
+    }
+
+    private finishClearingLogs(success: boolean): void {
+        this.ngZone.run(() => {
+            this.isClearingLogs = false;
+            this.logClearResult = success ? null : 'error';
+            // Failed clearing can still have removed some logs. Always read the actual size.
+            this.refreshLogFilesSize();
+        });
+    }
+
     copySecret(): void {
-        const { secret } = this.pdcCompanionForm.getRawValue();
+        const { secret } = this.zanoCompanionForm.getRawValue();
 
         this.backend.setClipboard(secret);
 
@@ -204,7 +363,7 @@ export class SettingsComponent implements OnInit {
     }
 
     copyBuildVersion(): void {
-        this.backend.setClipboard(`Build version: ${this.currentBuild}`);
+        this.backend.setClipboard(`${this.translate.instant('COMMON.BUILD_VERSION')}: ${this.variablesService.buildVersion}`);
 
         this.isBuildVersionWasCopied = true;
         this.buildVersionWasCopiedTimeout = setTimeout(() => {
@@ -214,7 +373,7 @@ export class SettingsComponent implements OnInit {
     }
 
     private generateSecret(): void {
-        this.pdcCompanionForm.get('secret').setValue(generateRandomString(40));
+        this.zanoCompanionForm.get('secret').setValue(generateRandomString(40));
     }
 
     regenerateSecret(): void {
@@ -228,29 +387,45 @@ export class SettingsComponent implements OnInit {
     }
 
     onSubmitChangePass(): void {
-        if (this.changeForm.valid) {
-            this.variablesService.appPass = this.changeForm.get('new_password').value;
+        if (this.isMasterPasswordSaving || this.changeForm.invalid) {
+            return;
+        }
 
-            this.backend.setMasterPassword({ pass: this.variablesService.appPass }, (status, data) => {
-                if (status) {
-                    this.backend.storeSecureAppData({
-                        pass: this.variablesService.appPass,
-                    });
-                    this.variablesService.appLogin = true;
-                    this.variablesService.dataIsLoaded = true;
-                    if (this.variablesService.settings.appLockTime) {
-                        this.variablesService.startCountdown();
-                    }
-                    this.ngZone.run(() => {
-                        this.pdcCompanionForm.controls.pdcCompation.enable({ emitEvent: false });
-                        this.onSave();
-                    });
-                } else {
-                    console.log(data['error_code']);
+        const newPassword = this.changeForm.controls.new_password.value;
+        this.isMasterPasswordSaving = true;
+        this.masterPasswordSaveError = false;
+        this.ifSaved = false;
+        this.variablesService.stopCountdown();
+
+        this.backend.setMasterPassword({ pass: newPassword }, (status: boolean) => {
+            this.ngZone.run(() => {
+                if (!status) {
+                    this.finishMasterPasswordSave(false);
+                    return;
                 }
-            });
 
+                // The backend already uses this password in memory, even if the following file write fails.
+                this.variablesService.appPass = newPassword;
+                this.changeForm.patchValue({ password: newPassword, appPass: newPassword });
+                this.backend.storeSecureAppData((saved: boolean) => {
+                    this.ngZone.run(() => this.finishMasterPasswordSave(saved));
+                });
+            });
+        });
+    }
+
+    private finishMasterPasswordSave(saved: boolean): void {
+        this.isMasterPasswordSaving = false;
+        this.masterPasswordSaveError = !saved;
+        if (saved) {
+            this.variablesService.appLogin = true;
+            this.variablesService.dataIsLoaded = true;
             this.changeForm.reset({ appPass: this.variablesService.appPass });
+            this.zanoCompanionForm.controls.zanoCompation.enable({ emitEvent: false });
+            this.onSave();
+        }
+        if (this.variablesService.dataIsLoaded && this.variablesService.appPass && this.variablesService.settings.appLockTime) {
+            this.variablesService.startCountdown();
         }
     }
 
@@ -292,17 +467,23 @@ export class SettingsComponent implements OnInit {
         this.backend.storeAppData();
     }
 
-    showPrice(): void {
+    onCurrencyChange(): void {
+        this.backend.storeAppData();
+    }
+
+    toggleVisibilityBalance(): void {
         this.variablesService.visibilityBalance$.next(!this.variablesService.visibilityBalance$.value);
         this.backend.storeAppData();
     }
 
     toggleDarkTheme(): void {
         const { settings, isDarkTheme$ } = this.variablesService;
-        const isDarkTheme: boolean = !settings.isDarkTheme;
+        const isDarkTheme = !settings.isDarkTheme;
         this.variablesService.settings.isDarkTheme = isDarkTheme;
         isDarkTheme$.next(isDarkTheme);
 
         this.backend.storeAppData();
     }
+
+    protected readonly currenciesItems = currenciesItems;
 }

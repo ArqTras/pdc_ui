@@ -9,12 +9,16 @@ import {
     Output,
     Renderer2,
     SecurityContext,
+    TemplateRef,
+    ViewContainerRef,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
 @Directive({
     // eslint-disable-next-line
     selector: '[tooltip]',
+    standalone: true,
+    exportAs: 'tooltip',
 })
 export class TooltipDirective implements OnDestroy {
     @HostBinding('style.cursor') cursor;
@@ -23,7 +27,7 @@ export class TooltipDirective implements OnDestroy {
 
     @Input() placement: string;
 
-    @Input() tooltipClass: string;
+    @Input() tooltipClass = 'tooltip';
 
     @Input() timeout = 0;
 
@@ -43,25 +47,38 @@ export class TooltipDirective implements OnDestroy {
 
     removeTooltipTimeDelay;
 
+    showTimeout;
+
     private enter: (event: MouseEvent) => void;
 
     private leave: (event: MouseEvent) => void;
 
-    constructor(private el: ElementRef, private renderer: Renderer2, private sanitizer: DomSanitizer) {}
+    private destroyed = false;
 
-    @HostListener('mouseenter') onMouseEnter(): void {
-        if (!this.tooltipInner) {
-            return;
-        }
-        if (
-            this.showWhenNoOverflow ||
-            (!this.showWhenNoOverflow && this.el.nativeElement.offsetWidth < this.el.nativeElement.scrollWidth)
-        ) {
+    constructor(
+        private el: ElementRef,
+        private renderer: Renderer2,
+        private sanitizer: DomSanitizer,
+        private viewContainerRef: ViewContainerRef
+    ) {}
+
+    @HostListener('mouseenter')
+    // @HostListener('focusin')
+    onMouseEnter(): void {
+        if (!this.tooltipInner || this.destroyed) return;
+
+        const isOverflowing = this.el.nativeElement.offsetWidth < this.el.nativeElement.scrollWidth;
+        const shouldShow = this.showWhenNoOverflow || (!this.showWhenNoOverflow && isOverflowing);
+
+        if (shouldShow) {
             this.cursor = 'pointer';
+
             if (!this.tooltip) {
                 if (this.timeDelay !== 0) {
                     this.removeTooltipTimeDelay = setTimeout(() => {
-                        this.show();
+                        if (!this.destroyed) {
+                            this.show();
+                        }
                     }, this.timeDelay);
                 } else {
                     this.show();
@@ -72,8 +89,11 @@ export class TooltipDirective implements OnDestroy {
         }
     }
 
-    @HostListener('mouseleave') onMouseLeave(): void {
+    @HostListener('mouseleave')
+    // @HostListener('focusout')
+    onMouseLeave(): void {
         clearTimeout(this.removeTooltipTimeDelay);
+        clearTimeout(this.showTimeout);
         if (this.tooltip) {
             this.hide();
         }
@@ -82,7 +102,9 @@ export class TooltipDirective implements OnDestroy {
     show(): void {
         this.create();
         this.placement = this.placement === null ? 'top' : this.placement;
-        this.setPosition(this.placement);
+        this.showTimeout = setTimeout(() => {
+            this.setPosition(this.placement);
+        }, 50);
     }
 
     hide(): void {
@@ -101,6 +123,7 @@ export class TooltipDirective implements OnDestroy {
     cancelHide(): void {
         clearTimeout(this.removeTooltipTimeout);
         clearTimeout(this.removeTooltipTimeoutInner);
+        clearTimeout(this.removeTooltipTimeDelay);
         if (this.tooltip) {
             this.renderer.setStyle(this.tooltip, 'opacity', '1');
         }
@@ -110,9 +133,12 @@ export class TooltipDirective implements OnDestroy {
         this.tooltip = this.renderer.createElement('div');
         let innerBlock = this.renderer.createElement('div');
         if (typeof this.tooltipInner === 'string') {
-            innerBlock.innerText = this.sanitizer.sanitize(SecurityContext.HTML, this.tooltipInner);
+            innerBlock.innerHTML = this.sanitizer.sanitize(SecurityContext.HTML, this.tooltipInner);
         } else {
-            if (this.tooltipInner) {
+            if (this.tooltipInner instanceof TemplateRef) {
+                const view = this.viewContainerRef.createEmbeddedView(this.tooltipInner);
+                view.rootNodes.forEach((node) => this.renderer.appendChild(innerBlock, node));
+            } else {
                 innerBlock = this.tooltipInner;
             }
         }
@@ -279,9 +305,13 @@ export class TooltipDirective implements OnDestroy {
     }
 
     ngOnDestroy(): void {
+        this.destroyed = true;
+
         clearTimeout(this.removeTooltipTimeout);
         clearTimeout(this.removeTooltipTimeoutInner);
         clearTimeout(this.removeTooltipTimeDelay);
+        clearTimeout(this.showTimeout);
+
         if (this.tooltip) {
             this.renderer.removeChild(document.body, this.tooltip);
             this.tooltip = null;

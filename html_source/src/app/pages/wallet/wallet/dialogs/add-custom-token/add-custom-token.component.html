@@ -1,0 +1,56 @@
+<form role="form" (ngSubmit)="beforeSubmit()" [formGroup]="formGroup">
+    <h3 aria-live="assertive" mat-dialog-title>
+        {{ 'WALLET.MODAL_WHITELIST_ASSET.TITLE' | translate }}
+    </h3>
+
+    <mat-dialog-content>
+        <fieldset class="form__field mb-0">
+            <label for="asset_id">{{ 'WALLET.MODAL_WHITELIST_ASSET.FIELD_TITLE' | translate }}</label>
+            <input
+                (contextmenu)="variablesService.onContextMenuPasteSelect($event)"
+                aria-describedby="asset-id-error1 asset-id-error2 asset-id-error3"
+                class="form__field--input"
+                formControlName="asset_id"
+                id="asset_id"
+                autofocus
+                appAutofocus
+                maxlength="64"
+                name="asset_id"
+                placeholder="Enter Asset ID"
+                type="text"
+            />
+            <ng-container *ngIf="formGroup.controls.asset_id | isVisibleControlError">
+                <div *ngIf="formGroup.controls.asset_id.hasError('invalidHash')" aria-live="assertive" class="error" id="asset-id-error1">
+                    {{ 'WALLET.MODAL_WHITELIST_ASSET.FORM_ERRORS.ERROR1' | translate }}
+                </div>
+                <div *ngIf="formGroup.controls.asset_id.hasError('wrongAssetId')" aria-live="assertive" class="error" id="asset-id-error2">
+                    {{ formGroup.controls.asset_id.errors['wrongAssetId'].errorText | translate }}
+                </div>
+                <div *ngIf="formGroup.controls.asset_id.hasError('assetIdExists')" aria-live="assertive" class="error" id="asset-id-error3">
+                    {{ 'WALLET.MODAL_WHITELIST_ASSET.FORM_ERRORS.ERROR2' | translate }}
+                </div>
+            </ng-container>
+        </fieldset>
+    </mat-dialog-content>
+
+    <mat-dialog-actions>
+        <div fxFlex="1 1 auto" fxLayout="row nowrap" fxLayoutGap="1rem">
+            <button class="outline big w-100" mat-dialog-close type="button">
+                {{ 'MODALS.CANCEL' | translate }}
+            </button>
+            <button
+                [attr.aria-label]="'MODALS.ADD_TOKEN' | translate"
+                [disabled]="formGroup.invalid || loading"
+                class="primary big w-100"
+                type="submit"
+            >
+                <ng-container *ngIf="!loading; else loadingTemplate">
+                    {{ 'MODALS.ADD_TOKEN' | translate }}
+                </ng-container>
+                <ng-template #loadingTemplate>
+                    <pdc-loader></pdc-loader>
+                </ng-template>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</form>

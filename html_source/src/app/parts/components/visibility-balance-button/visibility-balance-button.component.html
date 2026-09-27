@@ -1,8 +1,12 @@
 <button
+    (click)="variablesService.visibilityBalance$.next(!variablesService.visibilityBalance$.value)"
+    [matTooltipShowDelay]="800"
+    [matTooltip]="
+        ((variablesService.visibilityBalance$ | async) ? 'WALLET.TOOLTIPS.HIDE_BALANCE' : 'WALLET.TOOLTIPS.SHOW_BALANCE') | translate
+    "
     class="btn-icon circle big"
-    (click)="toggle()"
+    type="button"
 >
-    <mat-icon
-        [svgIcon]="(variablesService.visibilityBalance$ | async) ? 'pdc-hide-balance' : 'pdc-show-balance'"
-    ></mat-icon>
+    <mat-icon aria-hidden="true" [svgIcon]="(variablesService.visibilityBalance$ | async) ? 'pdc-hide-balance' : 'pdc-show-balance'">
+    </mat-icon>
 </button>

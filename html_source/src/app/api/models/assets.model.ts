@@ -6,6 +6,7 @@ export interface PriceInfo {
               name: string;
               usd: number;
               usd_24h_change: number;
+              fiat_prices: { [key: string]: number };
           };
 }
 
@@ -31,6 +32,8 @@ export interface AssetInfo {
 }
 
 export type VerifiedAssetInfoWhitelist = AssetInfo[];
+
+export type LocalBlacklistVerifiedAssets = string[];
 
 export type AssetBalances = AssetBalance[];
 
@@ -70,4 +73,21 @@ export interface AssetsWhitelistGetResponseData {
     id: number;
     jsonrpc: string;
     result: AssetsInfoWhitelist;
+}
+
+export interface AssetsWhitelistAddResponseData {
+    id: number;
+    jsonrpc: string;
+    result: {
+        asset_descriptor: AssetInfo;
+        status: string;
+    };
+}
+
+export interface ResponseAssetsWhitelistRemove {
+    id: number;
+    jsonrpc: string;
+    result: {
+        status: string;
+    };
 }

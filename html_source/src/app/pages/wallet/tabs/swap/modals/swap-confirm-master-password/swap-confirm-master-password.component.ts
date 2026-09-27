@@ -8,11 +8,23 @@ import { VariablesService } from '@parts/services/variables.service';
 import { PdcValidators } from '@parts/utils/pdc-validators';
 import { ProposalDetails } from '@api/models/swap.model';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { AutoFocusDirective } from '@parts/directives/autofocus.directive';
+import { AssetTagComponent } from '@parts/components/asset-tag/asset-tag.component';
 
 @Component({
     selector: 'app-swap-confirm-master-password',
     standalone: true,
-    imports: [CommonModule, FlexModule, ReactiveFormsModule, TranslateModule, IntToMoneyPipeModule, GetAssetInfoPipe, MatDialogModule],
+    imports: [
+        CommonModule,
+        FlexModule,
+        ReactiveFormsModule,
+        TranslateModule,
+        IntToMoneyPipeModule,
+        GetAssetInfoPipe,
+        MatDialogModule,
+        AutoFocusDirective,
+        AssetTagComponent,
+    ],
     templateUrl: './swap-confirm-master-password.component.html',
     styleUrls: ['./swap-confirm-master-password.component.scss'],
 })

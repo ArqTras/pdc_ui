@@ -47,7 +47,7 @@ export class SendDetailsModalComponent implements OnInit, OnDestroy {
 
     @Input() job_id: number;
 
-    @Output() eventClose = new EventEmitter<boolean>();
+    @Output() event_close = new EventEmitter<boolean>();
 
     @ViewChild('elDetailsList', { static: true }) elDetailsList: ElementRef;
 
@@ -88,7 +88,7 @@ export class SendDetailsModalComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.renderer.addClass(document.body, 'no-scroll');
         const {
-            currentWallet: { wallet_id },
+            current_wallet: { wallet_id },
             settings: { appUseTor },
         } = this.variablesService;
 

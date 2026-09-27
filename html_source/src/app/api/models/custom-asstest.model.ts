@@ -22,15 +22,6 @@ export interface DeployAssetParams {
     destinations: Destinations;
 }
 
-export interface ResponseDeployAsset {
-    id: number;
-    jsonrpc: string;
-    result: {
-        new_asset_id: string;
-        result_tx: string;
-    };
-}
-
 export interface UpdateAssetParams {
     asset_descriptor: Partial<AssetDescriptor>;
     asset_id: string;
@@ -39,12 +30,4 @@ export interface UpdateAssetParams {
 export interface EmitParams {
     destinations: Destinations;
     asset_id: string;
-}
-
-export interface ResponseUpdateAsset {
-    id: number;
-    jsonrpc: string;
-    result: {
-        result_tx: string;
-    };
 }

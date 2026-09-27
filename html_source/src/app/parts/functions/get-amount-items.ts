@@ -2,34 +2,35 @@ import { Subtransfer, Transaction } from '@api/models/transaction.model';
 import { Wallet } from '@api/models/wallet.model';
 import { intToMoney } from '@parts/functions/int-to-money';
 import { AssetInfo } from '@api/models/assets.model';
-import { pdcAssetInfo } from '@parts/data/assets';
+import { PDC_ASSET_INFO } from '@parts/data/pdc-assets-info';
 import { isFinalizator, isInitiator, isSelfTransaction, isSwapTransaction } from '@parts/functions/identify-transaction';
-
-export interface AmountItem {
-    amount: string;
-    ticker: string;
-}
-
-export type AmountItems = AmountItem[];
+import { AmountItems } from '@parts/interfaces/amount-items.interface';
 
 export const getAmountItems = (transaction: Transaction, wallet: Wallet): AmountItems => {
-    const { subtransfers, fee } = transaction;
+    const { subtransfers_by_pid, fee } = transaction;
+
+    const allSubtransfers: Subtransfer[] = [];
+    if (subtransfers_by_pid) {
+        for (const group of subtransfers_by_pid) {
+            allSubtransfers.push(...group.subtransfers);
+        }
+    }
 
     const items: { amount: string; ticker: string }[] = [];
 
-    if (!subtransfers?.length) {
-        items.push({ amount: '0', ticker: pdcAssetInfo.ticker });
+    if (!allSubtransfers.length) {
+        items.push({ amount: '0', ticker: PDC_ASSET_INFO.ticker });
         return items;
     }
 
-    if (isInitiator(transaction) && !Boolean(subtransfers.find(({ asset_id }) => asset_id === pdcAssetInfo.asset_id))) {
-        const preparedAmount: string = intToMoney(fee, pdcAssetInfo.decimal_point);
-        items.push({ amount: preparedAmount, ticker: pdcAssetInfo.ticker });
+    if (isInitiator(transaction) && !Boolean(allSubtransfers.find(({ asset_id }) => asset_id === PDC_ASSET_INFO.asset_id))) {
+        const preparedAmount: string = intToMoney(fee, PDC_ASSET_INFO.decimal_point);
+        items.push({ amount: preparedAmount, ticker: PDC_ASSET_INFO.ticker });
     }
 
-    subtransfers.forEach((subtransfer: Subtransfer) => {
+    allSubtransfers.forEach((subtransfer: Subtransfer) => {
         const { asset_id, amount, is_income } = subtransfer;
-        const asset_info: AssetInfo | undefined = wallet.allAssetsInfo.find(v => asset_id === v.asset_id);
+        const asset_info: AssetInfo | undefined = wallet.allAssetsInfo.find((v) => asset_id === v.asset_id);
 
         if (!asset_info) {
             if (amount.toNumber() === 0) {
@@ -43,7 +44,7 @@ export const getAmountItems = (transaction: Transaction, wallet: Wallet): Amount
 
         const { ticker, decimal_point } = asset_info;
 
-        if (asset_id !== pdcAssetInfo.asset_id) {
+        if (asset_id !== PDC_ASSET_INFO.asset_id) {
             if (amount.toNumber() === 0) {
                 return;
             }
@@ -53,7 +54,7 @@ export const getAmountItems = (transaction: Transaction, wallet: Wallet): Amount
             return;
         }
 
-        if (asset_id === pdcAssetInfo.asset_id) {
+        if (asset_id === PDC_ASSET_INFO.asset_id) {
             const { address } = wallet;
 
             const selfTransaction: boolean = isSelfTransaction(transaction, address);

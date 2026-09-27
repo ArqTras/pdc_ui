@@ -13,10 +13,8 @@ import { SeedPhraseComponent } from './seed-phrase/seed-phrase.component';
 import { AssignAliasComponent } from './assign-alias/assign-alias.component';
 import { EditAliasComponent } from './edit-alias/edit-alias.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DefaultImgModule, DisablePriceFetchModule } from '@parts/directives';
-import { TooltipModule } from '@parts/directives/tooltip/tooltip.module';
+import { DefaultImgModule, DisablePriceFetchDirective, TooltipDirective } from '@parts/directives';
 import { ConfirmModalModule } from '@parts/modals/confirm-modal/confirm-modal.module';
-import { DeeplinkModule } from './deeplink/deeplink.module';
 import { FullLayoutModule } from '../layouts/full-layout/full-layout.module';
 import { WithSidebarLayoutModule } from '../layouts/with-sidebar-layout/with-sidebar-layout.module';
 import { OverlayModule } from '@angular/cdk/overlay';
@@ -29,7 +27,7 @@ import {
     ContractTimeLeftPipeModule,
     HistoryTypeMessagesPipeModule,
     IntToMoneyPipeModule,
-    IsAvailableAliasNamePipeModule,
+    IsAvailableAliasNamePipe,
     MoneyToIntPipeModule,
     SafeHtmlPipeModule,
     ShortStringPipe,
@@ -47,6 +45,10 @@ import { BreadcrumbsComponent } from '@parts/components/breadcrumbs/breadcrumbs.
 import { BackButtonComponent } from '@parts/components/back-button/back-button.component';
 import { MatIconModule } from '@angular/material/icon';
 import { IsVisibleControlErrorPipe } from '@parts/pipes/is-visible-control-error.pipe';
+import { PdcLogoComponent } from '@parts/components/pdc-logo/pdc-logo.component';
+import { A11yModule } from '@angular/cdk/a11y';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
     declarations: [
@@ -71,10 +73,9 @@ import { IsVisibleControlErrorPipe } from '@parts/pipes/is-visible-control-error
         NgSelectModule,
         TranslateModule.forChild(),
         FlexLayoutModule,
-        DisablePriceFetchModule,
-        TooltipModule,
+        DisablePriceFetchDirective,
+        TooltipDirective,
         ConfirmModalModule,
-        DeeplinkModule,
         FullLayoutModule,
         WithSidebarLayoutModule,
         OverlayModule,
@@ -83,7 +84,7 @@ import { IsVisibleControlErrorPipe } from '@parts/pipes/is-visible-control-error
         ContractTimeLeftPipeModule,
         HistoryTypeMessagesPipeModule,
         IntToMoneyPipeModule,
-        IsAvailableAliasNamePipeModule,
+        IsAvailableAliasNamePipe,
         MoneyToIntPipeModule,
         SafeHtmlPipeModule,
         ShortStringPipe,
@@ -100,6 +101,11 @@ import { IsVisibleControlErrorPipe } from '@parts/pipes/is-visible-control-error
         BackButtonComponent,
         MatIconModule,
         IsVisibleControlErrorPipe,
+        PdcLogoComponent,
+        A11yModule,
+        TranslateModule,
+        MatTooltipModule,
+        MatDialogModule,
     ],
 })
 export class PagesModule {}

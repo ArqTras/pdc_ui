@@ -3,99 +3,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { VariablesService } from '@parts/services/variables.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Wallet } from '@api/models/wallet.model';
-import { ConfirmModalComponent, ConfirmModalData } from '@parts/modals/confirm-modal/confirm-modal.component';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { WalletsService } from '@parts/services/wallets.service';
 import { PdcLoadersService } from '@parts/services/pdc-loaders.service';
-import { BackendService } from '@api/services/backend.service';
-import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
+import { NavigationService } from '@parts/services/back.service';
 
 @Component({
     selector: 'app-sidebar',
-    template: `
-        <div class="sidebar-header mb-2">
-            <div class="logo">
-                <img [src]="pdcLogo" alt="pdc-logo" />
-            </div>
-        </div>
-
-        <div class="sidebar-content">
-            <div (cdkDropListDropped)="drop($event)" cdkDropList cdkDropListLockAxis="y"
-                 class="sidebar-content-list scrolled-content mb-1">
-                <app-wallet-card
-                    (click)="selectWallet(wallet.wallet_id)"
-                    (eventClose)="beforeClose($event)"
-                    *ngFor="let wallet of variablesService.wallets"
-                    [cdkDragData]="wallet"
-                    [ngClass]="{
-                        active: wallet?.wallet_id === variablesService?.currentWallet?.wallet_id,
-                        auditable: wallet.is_auditable && !wallet.is_watch_only,
-                        'watch-only': wallet.is_watch_only,
-                        'offset-testnet': variablesService.testnet,
-                        'mb-1': !variablesService.testnet
-                    }"
-                    [wallet]="wallet"
-                    cdkDrag
-                ></app-wallet-card>
-            </div>
-
-            <div class="sidebar-nav scrolled-content">
-                <button
-                    (click)="goMainPage()"
-                    class="outline small w-100 mb-1 px-2"
-                    fxLayout="row inline wrap"
-                    fxLayoutAlign="start center"
-                >
-                    <mat-icon class="mr-1" svgIcon="pdc-plus"></mat-icon>
-                    <span>{{ 'SIDEBAR.ADD_NEW' | translate }}</span>
-                </button>
-
-                <button
-                    [routerLink]="['/settings']"
-                    class="outline small w-100 mb-1 px-2"
-                    fxLayout="row inline wrap"
-                    fxLayoutAlign="start center"
-                    routerLinkActive="active"
-                >
-                    <mat-icon class="mr-1" svgIcon="pdc-settings"></mat-icon>
-                    <span>{{ 'SIDEBAR.SETTINGS' | translate }}</span>
-                </button>
-
-                <ng-container *ngIf="variablesService.appPass === ''; else masterPass">
-                    <button
-                        (click)="logOut()"
-                        [delay]="500"
-                        [disabled]="variablesService.appPass === ''"
-                        [timeDelay]="500"
-                        class="outline small w-100 px-2"
-                        fxLayout="row inline wrap"
-                        fxLayoutAlign="start center"
-                        placement="bottom"
-                        tooltip="{{ 'SIDEBAR.LOG_OUT_TOOLTIP' | translate }}"
-                        tooltipClass="table-tooltip account-tooltip"
-                    >
-                        <mat-icon class="mr-1" svgIcon="pdc-logout"></mat-icon>
-                        <span>{{ 'SIDEBAR.LOG_OUT' | translate }}</span>
-                    </button>
-                </ng-container>
-
-                <ng-template #masterPass>
-                    <button (click)="logOut()" class="outline small w-100 px-2" fxLayout="row inline wrap"
-                            fxLayoutAlign="start center">
-                        <mat-icon class="mr-1" svgIcon="pdc-logout"></mat-icon>
-                        <span> {{ 'SIDEBAR.LOG_OUT' | translate }}</span>
-                    </button>
-                </ng-template>
-            </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <app-synchronization-status></app-synchronization-status>
-        </div>
-
-        <app-deeplink></app-deeplink>
-    `,
+    templateUrl: './sidebar.component.html',
     styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnDestroy {
@@ -103,34 +18,17 @@ export class SidebarComponent implements OnDestroy {
 
     constructor(
         public variablesService: VariablesService,
-        private walletsService: WalletsService,
+        public translateService: TranslateService,
         private route: ActivatedRoute,
         private router: Router,
         private ngZone: NgZone,
-        private _matDialog: MatDialog,
-        private backend: BackendService,
-        public pdcLoadersService: PdcLoadersService
+        public pdcLoadersService: PdcLoadersService,
+        private navigationService: NavigationService
     ) {}
-
-    get pdcLogo(): string {
-        const {
-            settings: { isDarkTheme },
-        } = this.variablesService;
-        return isDarkTheme ? 'assets/icons/blue/pdc-logo.png' : 'assets/icons/blue/light-pdc-logo.png';
-    }
 
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
-    }
-
-    toggleDarkTheme(): void {
-        const { settings, isDarkTheme$ } = this.variablesService;
-        const isDarkTheme: boolean = !settings.isDarkTheme;
-        this.variablesService.settings.isDarkTheme = isDarkTheme;
-        isDarkTheme$.next(isDarkTheme);
-
-        this.backend.storeAppData();
     }
 
     goMainPage(): void {
@@ -145,39 +43,11 @@ export class SidebarComponent implements OnDestroy {
         }
     }
 
-    selectWallet(id: number): void {
-        this.ngZone.run(() => {
-            this.variablesService.setCurrentWallet(id);
-            this.router.navigate(['/wallet/assets']);
-        });
-    }
-
-    drop(event: CdkDragDrop<Wallet[]>): void {
+    handlerDrop(event: CdkDragDrop<Wallet[]>): void {
         moveItemInArray(this.variablesService.wallets, event.previousIndex, event.currentIndex);
     }
 
-    beforeClose(wallet_id): void {
-        const config: MatDialogConfig<ConfirmModalData> = {
-            data: {
-                title: 'WALLET.CONFIRM.MESSAGE',
-                message: 'WALLET.CONFIRM.TITLE',
-            },
-        };
-
-        this._matDialog
-            .open<ConfirmModalComponent, ConfirmModalData, boolean>(ConfirmModalComponent, config)
-            .afterClosed()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-                next: confirmed => confirmed && this.closeWallet(wallet_id),
-            });
-    }
-
-    closeWallet(wallet_id): void {
-        this.walletsService.closeWallet(wallet_id);
-    }
-
-    logOut(): void {
+    logout(): void {
         this.pdcLoadersService.open('fullScreen', 'SIDEBAR.SYNCHRONIZATION.LOGGING_OUT');
 
         setTimeout(() => {
@@ -186,6 +56,7 @@ export class SidebarComponent implements OnDestroy {
             this.variablesService.appPass = '';
             this.ngZone.run(() => {
                 this.router.navigate(['/login'], { queryParams: { type: 'auth' } }).then(() => {
+                    this.navigationService.resetHistoryToCurrent();
                     this.pdcLoadersService.close('fullScreen');
                 });
             });

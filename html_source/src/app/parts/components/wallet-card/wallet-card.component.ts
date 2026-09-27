@@ -1,80 +1,55 @@
-import { Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
+import { Component, Input, NgZone } from '@angular/core';
 import { Wallet } from '@api/models/wallet.model';
 import { VariablesService } from '@parts/services/variables.service';
-import { BigNumber } from 'bignumber.js';
-import { LOCKED_BALANCE_HELP_PAGE } from '@parts/data/constants';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { IntToMoneyPipe, IntToMoneyPipeModule } from '@parts/pipes';
-import { BackendService } from '@api/services/backend.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { IntToMoneyPipeModule } from '@parts/pipes';
 import { CommonModule } from '@angular/common';
-import { DisablePriceFetchModule, TooltipModule } from '@parts/directives';
-import { StakingSwitchComponent } from '@parts/components/staking-switch.component';
-import { VisibilityBalanceDirective } from '@parts/directives/visibility-balance.directive';
+import { DisablePriceFetchDirective, TooltipDirective } from '@parts/directives';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { WalletCardButtonCloseComponent } from '@parts/components/wallet-card/components/wallet-card-button-close/wallet-card-button-close.component';
+import { WalletCardNameComponent } from '@parts/components/wallet-card/components/wallet-card-name/wallet-card-name.component';
+import { WalletCardBalanceComponent } from '@parts/components/wallet-card/components/wallet-card-balance/wallet-card-balance.component';
+import { WalletCardStakingComponent } from '@parts/components/wallet-card/components/wallet-card-staking/wallet-card-staking.component';
+import { WalletCardProgressComponent } from '@parts/components/wallet-card/components/wallet-card-progress/wallet-card-progress.component';
+import { WalletCardAliasComponent } from '@parts/components/wallet-card/components/wallet-card-alias/wallet-card-alias.component';
 
 @Component({
     selector: 'app-wallet-card',
     templateUrl: './wallet-card.component.html',
+    styleUrls: ['./wallet-card.component.scss'],
     standalone: true,
     imports: [
         CommonModule,
-        TooltipModule,
+        TooltipDirective,
         TranslateModule,
         IntToMoneyPipeModule,
-        StakingSwitchComponent,
-        DisablePriceFetchModule,
-        VisibilityBalanceDirective,
+        DisablePriceFetchDirective,
         MatIconModule,
+        MatTooltipModule,
+        DragDropModule,
+        WalletCardButtonCloseComponent,
+        WalletCardNameComponent,
+        WalletCardBalanceComponent,
+        WalletCardStakingComponent,
+        WalletCardProgressComponent,
+        WalletCardAliasComponent,
     ],
 })
 export class WalletCardComponent {
-    @HostBinding('class') classAttr = 'wallet';
-
     @Input() wallet: Wallet;
 
-    @Output() eventClose = new EventEmitter<number>();
+    constructor(public variablesService: VariablesService, private _ngZone: NgZone, private _router: Router) {}
 
-    constructor(
-        public variablesService: VariablesService,
-        private intToMoneyPipe: IntToMoneyPipe,
-        private translate: TranslateService,
-        private backend: BackendService
-    ) {}
+    select(event: Event, id: number): void {
+        event.preventDefault();
+        event.stopPropagation();
 
-    getBalancesTooltip(): HTMLDivElement {
-        const tooltip = document.createElement('div');
-        const scrollWrapper = document.createElement('div');
-        if (!this.wallet || !this.wallet.balances) {
-            return null;
-        }
-        const { balances } = this.wallet;
-
-        scrollWrapper.classList.add('balance-scroll-list');
-        balances.forEach(({ unlocked, total, asset_info: { ticker } }) => {
-            const available = document.createElement('span');
-            available.setAttribute('class', 'available');
-            available.innerText = `${this.translate.instant('WALLET.AVAILABLE_BALANCE')} `;
-            const availableB = document.createElement('b');
-            availableB.innerText = `${this.intToMoneyPipe.transform(unlocked)} ${ticker || '---'}`;
-            available.appendChild(availableB);
-            scrollWrapper.appendChild(available);
-
-            const locked = document.createElement('span');
-            locked.setAttribute('class', 'locked');
-            locked.innerText = `${this.translate.instant('WALLET.LOCKED_BALANCE')} `;
-            const lockedB = document.createElement('b');
-            lockedB.innerText = `${this.intToMoneyPipe.transform(new BigNumber(total).minus(unlocked))} ${ticker || '---'}`;
-            locked.appendChild(lockedB);
-            scrollWrapper.appendChild(locked);
+        this._ngZone.run(() => {
+            this.variablesService.setCurrentWallet(id);
+            this._router.navigate(['/wallet/assets']).then();
         });
-        tooltip.appendChild(scrollWrapper);
-        const link = document.createElement('span');
-        link.setAttribute('class', 'link');
-        link.innerHTML = this.translate.instant('WALLET.LOCKED_BALANCE_LINK');
-        link.addEventListener('click', () => {
-            this.backend.openUrlInBrowser(LOCKED_BALANCE_HELP_PAGE);
-        });
-        tooltip.appendChild(link);
-        return tooltip;
     }
 }

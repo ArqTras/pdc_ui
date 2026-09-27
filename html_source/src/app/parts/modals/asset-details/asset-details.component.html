@@ -1,6 +1,37 @@
-<h2 mat-dialog-title>{{ data?.title ?? 'ASSETS.MODALS.ASSET_DETAILS.TITLE' | translate }}</h2>
+<h2 aria-live="assertive" mat-dialog-title>{{ data?.title ?? 'ASSETS.MODALS.ASSET_DETAILS.TITLE' | translate }}</h2>
 
 <mat-dialog-content>
+    <ng-container [ngSwitch]="assetWhitelistedStateView">
+        <ng-container *ngSwitchCase="'assetIsWhitelisted'">
+            <div class="asset-whitelist asset-is-whitelisted">
+                <h3>
+                    <mat-icon svgIcon="pdc-check" class="mr-1"></mat-icon>
+                    {{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.ASSET_IS_WHITELISTED' | translate }}
+                </h3>
+                <button type="button" (click)="removeAssetFromWhitelist()">
+                    <mat-icon class="mr-1" svgIcon="pdc-trash"></mat-icon> {{ 'ASSETS.MODALS.ASSET_DETAILS.BUTTONS.REMOVE' | translate }}
+                </button>
+            </div>
+        </ng-container>
+        <ng-container *ngSwitchCase="'assetIsNotWhitelisted'">
+            <div class="asset-whitelist asset-is-not-whitelisted">
+                <h3>
+                    <mat-icon svgIcon="pdc-warning-stroke" class="mr-1"></mat-icon>
+                    {{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.ASSET_IS_NOT_WHITELISTED' | translate }}
+                </h3>
+                <button type="button" (click)="addAssetToWhitelist()">
+                    <mat-icon class="mr-1" svgIcon="pdc-add"></mat-icon> {{ 'ASSETS.MODALS.ASSET_DETAILS.BUTTONS.ADD_ASSET' | translate }}
+                </button>
+            </div>
+        </ng-container>
+        <ng-container *ngSwitchCase="'assetIsWhitelistedGlobally'">
+            <div class="asset-whitelist asset-is-whitelisted-globally">
+                <h3>{{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.ASSET_IS_GLOBALLY_WHITELISTED' | translate }}</h3>
+            </div>
+        </ng-container>
+        <ng-container *ngSwitchDefault></ng-container>
+    </ng-container>
+
     <ng-container *ngIf="data.asset_info as asset_info; else templateEmpty">
         <table class="rounded-corners">
             <tbody>
@@ -27,14 +58,20 @@
                 <tr>
                     <td>{{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.CURRENT_SUPPLY' | translate }}</td>
                     <td>
-                        {{
-                            (asset_info.asset_id === pdcAssetInfo.asset_id
-                                ? variablesService.pdc_current_supply ?? 'Unknown'
-                                : asset_info.current_supply
-                            ) | intToMoney : asset_info.decimal_point
-                        }}
+                        <ng-container *ngIf="asset_info.asset_id !== pdcAssetInfo.asset_id; else zanoCurrentSupply">
+                            {{ asset_info.current_supply | intToMoney : asset_info.decimal_point }}
+                        </ng-container>
+
+                        <ng-template #zanoCurrentSupply>
+                            <ng-container *ngIf="variablesService.zano_current_supply !== undefined; else emptyCurrentSupply">
+                                {{ variablesService.zano_current_supply | intToMoney : asset_info.decimal_point }}
+                            </ng-container>
+                        </ng-template>
+
+                        <ng-template #emptyCurrentSupply> Unknown</ng-template>
                     </td>
                 </tr>
+
                 <tr>
                     <td>{{ 'ASSETS.MODALS.ASSET_DETAILS.LABELS.MAX_SUPPLE' | translate }}</td>
                     <td>
@@ -53,7 +90,7 @@
 </mat-dialog-content>
 
 <mat-dialog-actions>
-    <button class="outline big w-100" mat-dialog-close type="button">
+    <button appAutofocus cdkFocusInitial class="outline big w-100" mat-dialog-close type="button">
         {{ 'MODALS.OK' | translate }}
     </button>
 </mat-dialog-actions>

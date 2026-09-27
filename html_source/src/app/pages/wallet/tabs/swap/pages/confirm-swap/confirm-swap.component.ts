@@ -17,6 +17,7 @@ import { ProposalDetails } from '@api/models/swap.model';
 import { GetAssetInfoPipe } from '@parts/pipes/get-asset-info.pipe';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { SwapDetailsComponent } from '../../modals/swap-details/swap-details.component';
+import { AssetTagComponent } from '@parts/components/asset-tag/asset-tag.component';
 
 @Component({
     selector: 'app-confirm-swap',
@@ -30,6 +31,7 @@ import { SwapDetailsComponent } from '../../modals/swap-details/swap-details.com
         ReactiveFormsModule,
         IntToMoneyPipeModule,
         GetAssetInfoPipe,
+        AssetTagComponent,
     ],
     templateUrl: './confirm-swap.component.html',
     styleUrls: ['./confirm-swap.component.scss'],
@@ -106,7 +108,7 @@ export class ConfirmSwapComponent implements OnInit, OnDestroy {
         if (!this.hex_raw_proposal) {
             return;
         }
-        const { wallet_id } = this.variablesService.currentWallet;
+        const { wallet_id } = this.variablesService.current_wallet;
         const hex_raw_proposal = this.hex_raw_proposal;
 
         const params: ParamsCallRpc = {
@@ -135,7 +137,7 @@ export class ConfirmSwapComponent implements OnInit, OnDestroy {
     }
 
     private getProposalDetails(hex_raw_proposal: string): void {
-        const { wallet_id } = this.variablesService.currentWallet;
+        const { wallet_id } = this.variablesService.current_wallet;
 
         const params: ParamsCallRpc = {
             jsonrpc: '2.0',

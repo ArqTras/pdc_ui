@@ -1,75 +1,34 @@
-<div *ngIf="variablesService.testnet" class="testnet">
-    Testnet
-</div>
-<div class="content">
-    <div class="header">
-        <div class="left">
-            <div class="name text-ellipsis">
-                <span *ngIf="wallet.new_contracts" class="indicator">
-                    {{ wallet.new_contracts }}
-                </span>
+<div
+    (click)="select($event, wallet.wallet_id)"
+    (keydown.enter)="select($event, wallet.wallet_id)"
+    (keydown.space)="select($event, wallet.wallet_id)"
+    [attr.aria-selected]="wallet?.wallet_id === variablesService?.current_wallet?.wallet_id"
+    [ngClass]="{
+        active: wallet?.wallet_id === variablesService?.current_wallet?.wallet_id,
+        auditable: wallet.is_auditable && !wallet.is_watch_only,
+        'watch-only': wallet.is_watch_only
+    }"
+    class="wallet"
+    role="option"
+    tabindex="0"
+>
+    <span *ngIf="variablesService.testnet" class="testnet">Testnet</span>
 
-                <span
-                    [delay]="500"
-                    [showWhenNoOverflow]="false"
-                    class="name"
-                    placement="top-left"
-                    tooltip="{{ wallet.name }}"
-                    tooltipClass="table-tooltip account-tooltip"
-                >
-                    {{ !wallet.alias['name'] ? wallet.name : wallet.alias['name'] }}
-                </span>
+    <div class="content">
+        <header class="header">
+            <div class="overflow-hidden">
+                <pdc-wallet-card-name [wallet]="wallet"></pdc-wallet-card-name>
             </div>
-        </div>
-        <div class="right">
-            <button
-                (click)="eventClose.emit(wallet.wallet_id)"
-                [delay]="500"
-                [timeDelay]="500"
-                class="close"
-                placement="top"
-                tooltip="{{ 'WALLET.TOOLTIPS.REMOVE' | translate }}"
-                tooltipClass="table-tooltip account-tooltip"
-                type="button"
-            >
-                <mat-icon svgIcon="pdc-close"></mat-icon>
-            </button>
-        </div>
-    </div>
 
-    <h4>
-        <ng-container *appVisibilityBalance>
-            <span
-                *appDisablePriceFetch
-                [delay]="500"
-                [placement]="'bottom'"
-                [timeDelay]="1000"
-                [tooltipClass]="'balance-tooltip'"
-                [tooltip]="getBalancesTooltip()"
-                class="price"
-            >
-                {{
-                    wallet.getMoneyEquivalentForPdc(variablesService.pdcMoneyEquivalent) | intToMoney | currency : 'USD' || '---'
-                }}
-                <span [class.red]="variablesService.pdcMoneyEquivalentPercent < 0" class="percent">
-                    {{ variablesService.pdcMoneyEquivalentPercent | number : '1.2-2' }}%
-                </span>
-            </span>
-        </ng-container>
-    </h4>
+            <pdc-wallet-card-button-close [wallet]="wallet"></pdc-wallet-card-button-close>
+        </header>
 
-    <ng-container
-        *ngIf="(!wallet.is_auditable && !wallet.is_watch_only) || (wallet.is_auditable && !wallet.is_watch_only)">
-        <div *ngIf="!(!wallet.loaded && variablesService.daemon_state === 2)" class="staking">
-            <span class="text">{{ 'SIDEBAR.ACCOUNT.STAKING' | translate }}</span>
-            <app-staking-switch [(staking)]="wallet.staking" [wallet_id]="wallet.wallet_id"></app-staking-switch>
-        </div>
-    </ng-container>
+        <pdc-wallet-card-balance [wallet]="wallet"></pdc-wallet-card-balance>
 
-    <div *ngIf="!wallet.loaded && variablesService.daemon_state === 2" class="account-synchronization">
-        <div class="progress-bar">
-            <div [style.width]="wallet.progress + '%'" class="fill"></div>
-        </div>
-        <div class="progress-percent">{{ wallet.progress }}%</div>
+        <pdc-wallet-card-alias [wallet]="wallet"></pdc-wallet-card-alias>
+
+        <pdc-wallet-card-staking [wallet]="wallet"></pdc-wallet-card-staking>
+
+        <pdc-wallet-card-progress [wallet]="wallet"></pdc-wallet-card-progress>
     </div>
 </div>

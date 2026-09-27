@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, NgZone, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLinkWithHref } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,13 +19,13 @@ import { IntToMoneyPipeModule, MoneyToIntPipeModule, ShortStringPipe } from '@pa
 import { NgSelectModule } from '@ng-select/ng-select';
 import { VariablesService } from '@parts/services/variables.service';
 import { AssetBalance, AssetInfo } from '@api/models/assets.model';
-import { pdcAssetInfo } from '@parts/data/assets';
-import { regExpAliasName } from '@parts/utils/pdc-validators';
+import { PDC_ASSET_INFO } from '@parts/data/pdc-assets-info';
+import { REG_EXP_ALIAS_NAME } from '@parts/utils/pdc-validators';
 import { BackendService } from '@api/services/backend.service';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { debounceTime, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, map, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { BigNumber } from 'bignumber.js';
-import { assetHasNotBeenAddedToWallet, insuficcientFunds } from '@parts/utils/pdc-errors';
+import { assetHasNotBeenAddedToWallet, insufficientFunds } from '@parts/utils/pdc-errors';
 import { ParamsCallRpc } from '@api/models/call_rpc.model';
 import { LoaderComponent } from '@parts/components/loader.component';
 import { Wallet } from '@api/models/wallet.model';
@@ -36,6 +36,9 @@ import { MatOptionModule } from '@angular/material/core';
 import { WalletsService } from '@parts/services/wallets.service';
 import { MatIconModule } from '@angular/material/icon';
 import { GetLogoByAssetInfoPipe } from '@parts/pipes/get-logo-by-asset-info.pipe';
+import { MAXIMUM_VALUE } from '@parts/data/constants';
+import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
+import { IsVisibleControlErrorPipe } from '@parts/pipes/is-visible-control-error.pipe';
 
 @Component({
     selector: 'app-create-swap',
@@ -59,12 +62,17 @@ import { GetLogoByAssetInfoPipe } from '@parts/pipes/get-logo-by-asset-info.pipe
         MatOptionModule,
         MatIconModule,
         GetLogoByAssetInfoPipe,
+        ScrollingModule,
+        IsVisibleControlErrorPipe,
     ],
     templateUrl: './create-swap.component.html',
     styleUrls: ['./create-swap.component.scss'],
 })
-export class CreateSwapComponent implements OnDestroy {
-    breadcrumbItems: BreadcrumbItems = [
+export class CreateSwapComponent implements OnInit, OnDestroy {
+    @ViewChild(CdkVirtualScrollViewport)
+    cdkVirtualScrollViewPort: CdkVirtualScrollViewport;
+
+    readonly breadcrumbItems: BreadcrumbItems = [
         {
             routerLink: '/wallet/swap',
             title: 'CREATE_SWAP.BREADCRUMBS.ITEM1',
@@ -74,19 +82,31 @@ export class CreateSwapComponent implements OnDestroy {
         },
     ];
 
-    variablesService: VariablesService = inject(VariablesService);
+    readonly variablesService: VariablesService = inject(VariablesService);
 
-    fb: FormBuilder = inject(FormBuilder);
+    private readonly _fb: FormBuilder = inject(FormBuilder);
+
+    private readonly _backendService: BackendService = inject(BackendService);
+
+    private readonly _ngZone: NgZone = inject(NgZone);
+
+    private readonly _router: Router = inject(Router);
+
+    private readonly _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+
+    private readonly _walletsService: WalletsService = inject(WalletsService);
 
     aliasAddress: string;
 
     loading$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-    lowerCaseDisabled$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+    lowerCaseDisabled = true;
 
-    errorRpc: { code: number; message: string } = null;
+    itemSize = 40;
 
-    currentWallet: Wallet = this.variablesService.currentWallet;
+    errorRpc: { code: number; message: string } | undefined;
+
+    currentWallet: Wallet = this.variablesService.current_wallet;
 
     sendingAssetsInfo$: Observable<AssetInfo[]>;
 
@@ -95,6 +115,10 @@ export class CreateSwapComponent implements OnDestroy {
     receivingAssetsInfo$: Observable<AssetInfo[]>;
 
     receivingDecimalPoint$: Observable<number>;
+
+    items: string[] = [];
+
+    loadingItems = false;
 
     form: FormGroup<{
         sending: FormGroup<{
@@ -112,27 +136,29 @@ export class CreateSwapComponent implements OnDestroy {
         receiverAddress: undefined,
     };
 
-    addressItems$: Observable<string[]>;
+    get isShowHintNoAliasFound(): boolean {
+        const {
+            controls: {
+                receiverAddress: { value },
+            },
+        } = this.form;
+        return !this.loadingItems && value.startsWith('@') && value.length > 1 && !this.items.length;
+    }
 
-    loadingAddressItems$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+    get isShowHintEnterCharToSearch(): boolean {
+        const {
+            controls: {
+                receiverAddress: { value },
+            },
+        } = this.form;
+        return !this.loadingItems && value.startsWith('@') && value.length === 1 && !this.items.length;
+    }
 
-    private _cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
-
-    private _walletsService: WalletsService = inject(WalletsService);
-
-    private _openedWalletItems: string[] = this._walletsService.wallets.map(({ address, alias }) => alias?.name ?? address);
-
-    private _aliasItems: string[] = this.variablesService.aliases.map(({ name }) => name);
-
-    private _backendService: BackendService = inject(BackendService);
-
-    private _ngZone: NgZone = inject(NgZone);
-
-    private _router = inject(Router);
+    private _openedWalletItems: string[] = this._walletsService.opened_wallet_items;
 
     private _destroy$ = new Subject<void>();
 
-    constructor() {
+    ngOnInit(): void {
         this._createForm();
     }
 
@@ -141,18 +167,10 @@ export class CreateSwapComponent implements OnDestroy {
         this._destroy$.complete();
     }
 
-    isVisibleErrorByControl(control: AbstractControl): boolean {
-        return control.invalid && (control.dirty || control.touched);
-    }
-
-    isVisibleErrorByForm(form: FormGroup): boolean {
-        return form.invalid && (form.dirty || form.touched);
-    }
-
     reverse(): void {
         const { sending, receiving } = this.form.getRawValue();
 
-        const markAllAsTouched = () => {
+        const markAllAsTouched = (): void => {
             this.form.controls.sending.markAllAsTouched();
             this.form.controls.receiving.markAllAsTouched();
         };
@@ -196,18 +214,22 @@ export class CreateSwapComponent implements OnDestroy {
 
     pasteListenReceiverAddressField(event: ClipboardEvent): void {
         event.preventDefault();
+
         const {
-            controls: { receiverAddress },
+            controls: { receiverAddress: addressControl },
         } = this.form;
         const { clipboardData } = event;
-        let value: string = clipboardData.getData('Text') ?? '';
-        this.lowerCaseDisabled$.next(value.indexOf('@') !== 0);
 
-        if (value.indexOf('@') === 0) {
+        let value: string = clipboardData.getData('Text') ?? '';
+
+        const isEnteredAlias = value.startsWith('@');
+        this.lowerCaseDisabled = !isEnteredAlias;
+
+        if (isEnteredAlias) {
             value = value.toLowerCase();
         }
 
-        receiverAddress.patchValue(value);
+        addressControl.patchValue(value);
     }
 
     trackByFn(index: number, value: string): number | string {
@@ -226,13 +248,13 @@ export class CreateSwapComponent implements OnDestroy {
     submit(): void {
         this.loading$.next(true);
         const { sending, receiving, receiverAddress } = this.form.getRawValue();
-        const { wallet_id } = this.variablesService.currentWallet;
+        const { wallet_id } = this.variablesService.current_wallet;
         const { default_fee_big } = this.variablesService;
 
-        const { currentWallet } = this.variablesService;
+        const { current_wallet } = this.variablesService;
 
-        const sendingAsset: AssetInfo | undefined = currentWallet.getAssetInfoByAssetId(sending.asset_id);
-        const receivingAsset: AssetInfo | undefined = currentWallet.getAssetInfoByAssetId(receiving.asset_id);
+        const sendingAsset: AssetInfo | undefined = current_wallet.getAssetInfoByAssetId(sending.asset_id);
+        const receivingAsset: AssetInfo | undefined = current_wallet.getAssetInfoByAssetId(receiving.asset_id);
 
         if (!sendingAsset) {
             this.form.controls.sending.controls.asset_id.setErrors({
@@ -274,18 +296,7 @@ export class CreateSwapComponent implements OnDestroy {
         };
 
         if (receiverAddress.indexOf('@') === 0) {
-            const aliasName = receiverAddress;
-            const { aliases } = this.variablesService;
-            const alias = aliases.find(({ name }) => name === aliasName);
-
-            if (!alias) {
-                this.form.controls.receiverAddress.setErrors({
-                    alias_not_found: true,
-                });
-                return;
-            }
-
-            params2.params['destination_address'] = alias.address;
+            params2.params['destination_address'] = this.aliasAddress;
         } else {
             params2.params['destination_address'] = receiverAddress;
         }
@@ -314,64 +325,93 @@ export class CreateSwapComponent implements OnDestroy {
         const { balances$ } = this.currentWallet;
         this.sendingAssetsInfo$ = this.form.controls.receiving.controls.asset_id.valueChanges.pipe(
             startWith(this.form.controls.receiving.controls.asset_id.value),
-            switchMap(asset_id => balances$.pipe(
-                map(balances => balances.filter(v => v.asset_info.asset_id !== asset_id)),
-                map(balances => balances.map(({ asset_info }) => asset_info))
-            ))
+            switchMap((asset_id) =>
+                balances$.pipe(
+                    map((balances) => balances.filter((v) => v.asset_info.asset_id !== asset_id)),
+                    map((balances) => balances.map(({ asset_info }) => asset_info))
+                )
+            )
         );
         this.receivingAssetsInfo$ = this.form.controls.sending.controls.asset_id.valueChanges.pipe(
             startWith(this.form.controls.sending.controls.asset_id.value),
-            switchMap(asset_id => balances$.pipe(
-                map(balances => balances.filter(v => v.asset_info.asset_id !== asset_id)),
-                map(balances => balances.map(({ asset_info }) => asset_info))
-            ))
+            switchMap((asset_id) =>
+                balances$.pipe(
+                    map((balances) => balances.filter((v) => v.asset_info.asset_id !== asset_id)),
+                    map((balances) => balances.map(({ asset_info }) => asset_info))
+                )
+            )
         );
 
-        const { currentWallet } = this.variablesService;
+        const { current_wallet } = this.variablesService;
 
         this.sendingDecimalPoint$ = this.form.controls.sending.controls.asset_id.valueChanges.pipe(
             startWith(this.form.controls.sending.controls.asset_id.value),
             map((asset_id: string) => {
-                return currentWallet.getBalanceByAssetId(asset_id)?.asset_info.decimal_point ?? 0;
+                return current_wallet.getBalanceByAssetId(asset_id)?.asset_info.decimal_point ?? 0;
             })
         );
 
         this.receivingDecimalPoint$ = this.form.controls.receiving.controls.asset_id.valueChanges.pipe(
             startWith(this.form.controls.receiving.controls.asset_id.value),
             map((asset_id: string) => {
-                return currentWallet.getBalanceByAssetId(asset_id)?.asset_info.decimal_point ?? 0;
+                return current_wallet.getBalanceByAssetId(asset_id)?.asset_info.decimal_point ?? 0;
             })
         );
 
-        this.addressItems$ = this.form.controls.receiverAddress.valueChanges.pipe(
-            startWith(this.form.controls.receiverAddress.value),
-            tap(value => {
-                const condition = value[0] === '@';
-                this.lowerCaseDisabled$.next(!condition);
-                this.loadingAddressItems$.next(condition);
-            }),
-            debounceTime(250),
-            map(value => {
-                if (!value?.length) {
-                    return this._openedWalletItems;
-                }
-                if (value[0] === '@') {
-                    return this._aliasItems.filter(name => {
-                        return name.includes(value);
-                    });
-                }
-                return [];
-            }),
-            tap(() => this.loadingAddressItems$.next(false))
-        );
+        this._createAutocompleteItems();
+    }
+
+    private _createAutocompleteItems(): void {
+        const {
+            controls: { receiverAddress: addressControl },
+        } = this.form;
+
+        addressControl.valueChanges
+            .pipe(
+                startWith(addressControl.value),
+                tap((value) => {
+                    this.loadingItems = true;
+                    this.lowerCaseDisabled = !value.startsWith('@');
+                }),
+                debounceTime(500),
+                takeUntil(this._destroy$)
+            )
+            .subscribe({
+                next: (value) => {
+                    const isEnteredAlias = value.startsWith('@');
+                    const isEnteredAddress = !isEnteredAlias;
+
+                    if (isEnteredAddress) {
+                        this.items = this._openedWalletItems;
+                        this.loadingItems = false;
+                        return;
+                    }
+
+                    const alias_first_leters = value.slice(1); // slice to remove '@' symbol
+                    const n_of_items_to_return = 10;
+
+                    this._backendService.alias_lookup(
+                        {
+                            alias_first_leters,
+                            n_of_items_to_return,
+                        },
+                        (_, { result: { aliases } }) => {
+                            this._ngZone.run(() => {
+                                this.items = aliases?.map(({ alias }) => '@' + alias) ?? [];
+                                this.loadingItems = false;
+                            });
+                        }
+                    );
+                },
+            });
     }
 
     private _createForm(): void {
-        this.form = this.fb.group(
+        this.form = this._fb.group(
             {
-                sending: this.fb.group(
+                sending: this._fb.group(
                     {
-                        amount: this.fb.control(null, {
+                        amount: this._fb.control(null, {
                             validators: [
                                 Validators.required,
                                 ({ value }: FormControl): ValidationErrors | null => {
@@ -385,7 +425,7 @@ export class CreateSwapComponent implements OnDestroy {
                                 },
                             ],
                         }),
-                        asset_id: this.fb.control(pdcAssetInfo.asset_id, [Validators.required]),
+                        asset_id: this._fb.control(PDC_ASSET_INFO.asset_id, [Validators.required]),
                     },
                     {
                         validators: [
@@ -394,26 +434,25 @@ export class CreateSwapComponent implements OnDestroy {
                                 const { value: amount } = form.get('amount');
                                 const preparedAmount = new BigNumber(amount);
 
-                                const { maximum_value } = this.variablesService;
                                 if (!asset_id) {
                                     return null;
                                 }
 
-                                const asset: AssetBalance | undefined = this.variablesService.currentWallet.balances?.find(
-                                    v => v.asset_info.asset_id === asset_id
+                                const asset: AssetBalance | undefined = this.variablesService.current_wallet.balances?.find(
+                                    (v) => v.asset_info.asset_id === asset_id
                                 );
                                 if (asset) {
                                     const {
                                         asset_info: { decimal_point },
                                         unlocked,
                                     } = asset;
-                                    const maximum_amount_by_decimal_point = intToMoney(maximum_value, decimal_point);
+                                    const maximum_amount_by_decimal_point = intToMoney(MAXIMUM_VALUE, decimal_point);
                                     if (preparedAmount.isGreaterThan(maximum_amount_by_decimal_point)) {
-                                        return { greater_than_maximum_amount: { max: maximum_amount_by_decimal_point } };
+                                        return { greater_max: { max: maximum_amount_by_decimal_point } };
                                     }
 
                                     const preparedUnlocked = intToMoney(unlocked, decimal_point);
-                                    return preparedAmount.isGreaterThan(preparedUnlocked) ? { insuficcientFunds } : null;
+                                    return preparedAmount.isGreaterThan(preparedUnlocked) ? { insufficientFunds } : null;
                                 } else {
                                     return { assetHasNotBeenAddedToWallet };
                                 }
@@ -421,9 +460,9 @@ export class CreateSwapComponent implements OnDestroy {
                         ],
                     }
                 ),
-                receiving: this.fb.group(
+                receiving: this._fb.group(
                     {
-                        amount: this.fb.control(
+                        amount: this._fb.control(
                             {
                                 value: null,
                                 disabled: this.currentWallet.balances.length === 1,
@@ -442,11 +481,12 @@ export class CreateSwapComponent implements OnDestroy {
                                 },
                             ]
                         ),
-                        asset_id: this.fb.control(
+                        asset_id: this._fb.control(
                             {
-                                value: this.currentWallet.balances.length <= 1
-                                    ? null
-                                    : this.currentWallet.balances[1]?.asset_info?.asset_id ?? pdcAssetInfo.asset_id,
+                                value:
+                                    this.currentWallet.balances.length <= 1
+                                        ? null
+                                        : this.currentWallet.balances[1]?.asset_info?.asset_id ?? PDC_ASSET_INFO.asset_id,
                                 disabled: this.currentWallet.balances.length <= 1,
                             },
                             [Validators.required]
@@ -461,16 +501,16 @@ export class CreateSwapComponent implements OnDestroy {
                                     return null;
                                 }
 
-                                const asset: AssetBalance | undefined = this.variablesService.currentWallet.balances?.find(
-                                    v => v.asset_info.asset_id === asset_id
+                                const asset: AssetBalance | undefined = this.variablesService.current_wallet.balances?.find(
+                                    (v) => v.asset_info.asset_id === asset_id
                                 );
                                 if (asset) {
                                     const {
                                         asset_info: { decimal_point },
                                     } = asset;
-                                    const maximum_amount_by_decimal_point = intToMoney(this.variablesService.maximum_value, decimal_point);
+                                    const maximum_amount_by_decimal_point = intToMoney(MAXIMUM_VALUE, decimal_point);
                                     if (amount.isGreaterThan(maximum_amount_by_decimal_point)) {
-                                        return { greater_than_maximum_amount: { max: maximum_amount_by_decimal_point } };
+                                        return { greater_max: { max: maximum_amount_by_decimal_point } };
                                     }
                                     return null;
                                 } else {
@@ -480,13 +520,13 @@ export class CreateSwapComponent implements OnDestroy {
                         ],
                     }
                 ),
-                receiverAddress: this.fb.control('', [
+                receiverAddress: this._fb.control('', [
                     Validators.required,
                     (control: FormControl): ValidationErrors | null => {
                         this.aliasAddress = '';
                         if (control.value) {
                             if (control.value.indexOf('@') !== 0) {
-                                this._backendService.validateAddress(control.value, (valid_status, data) => {
+                                this._backendService.validateAddress(control.value, (valid_status) => {
                                     this._ngZone.run(() => {
                                         if (valid_status === false) {
                                             control.setErrors(Object.assign({ address_not_valid: true }, control.errors));
@@ -504,7 +544,7 @@ export class CreateSwapComponent implements OnDestroy {
                                 });
                                 return control.hasError('address_not_valid') ? { address_not_valid: true } : null;
                             } else {
-                                if (!regExpAliasName.test(control.value)) {
+                                if (!REG_EXP_ALIAS_NAME.test(control.value)) {
                                     return { alias_not_valid: true };
                                 } else {
                                     this._backendService.getAliasInfoByName(control.value.replace('@', ''), (alias_status, alias_data) => {
@@ -562,7 +602,7 @@ export class CreateSwapComponent implements OnDestroy {
             this.form.patchValue({
                 sending: {
                     asset_id,
-                }
+                },
             });
 
             if (this.form.getRawValue().receiving.asset_id === asset_id) {
@@ -571,12 +611,17 @@ export class CreateSwapComponent implements OnDestroy {
                         this.form.patchValue({
                             receiving: {
                                 asset_id: balance.asset_info.asset_id,
-                            }
+                            },
                         });
                         break;
                     }
                 }
             }
         }
+    }
+
+    openAutocomplete(): void {
+        this.cdkVirtualScrollViewPort?.scrollToIndex(0);
+        this.cdkVirtualScrollViewPort?.checkViewportSize();
     }
 }

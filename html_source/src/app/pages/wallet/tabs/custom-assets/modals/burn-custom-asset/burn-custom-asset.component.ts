@@ -4,10 +4,11 @@ import { NonNullableFormBuilder, ValidationErrors, Validators } from '@angular/f
 import { AssetBalance, AssetInfo } from '@api/models/assets.model';
 import BigNumber from 'bignumber.js';
 import { intToMoney } from '@parts/functions/int-to-money';
-import { insuficcientFunds } from '@parts/utils/pdc-errors';
+import { insufficientFunds } from '@parts/utils/pdc-errors';
 import { BackendService } from '@api/services/backend.service';
 import { moneyToInt } from '@parts/functions/money-to-int';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAXIMUM_VALUE } from '@parts/data/constants';
 
 @Component({
     selector: 'app-burn-custom-asset',
@@ -31,9 +32,9 @@ export class BurnCustomAssetComponent {
                 const {
                     asset_info: { asset_id },
                 } = this.data;
-                const { currentWallet, maximum_value } = this.variablesService;
+                const { current_wallet } = this.variablesService;
                 const prepared_amount = new BigNumber(amount);
-                const assetBalance: AssetBalance | undefined = currentWallet.getBalanceByAssetId(asset_id);
+                const assetBalance: AssetBalance | undefined = current_wallet.getBalanceByAssetId(asset_id);
 
                 if (!assetBalance) {
                     return {
@@ -46,13 +47,13 @@ export class BurnCustomAssetComponent {
                     asset_info: { decimal_point },
                 } = assetBalance;
 
-                const maximum_amount_by_decimal_point = intToMoney(maximum_value, decimal_point);
+                const maximum_amount_by_decimal_point = intToMoney(MAXIMUM_VALUE, decimal_point);
                 if (prepared_amount.isGreaterThan(maximum_amount_by_decimal_point)) {
-                    return { greater_than_maximum_amount: { max: maximum_amount_by_decimal_point } };
+                    return { greater_max: { max: maximum_amount_by_decimal_point } };
                 }
 
                 const preparedUnlocked = intToMoney(unlocked, decimal_point);
-                return prepared_amount.isGreaterThan(preparedUnlocked) ? { insuficcientFunds } : null;
+                return prepared_amount.isGreaterThan(preparedUnlocked) ? { insufficientFunds } : null;
             },
         ]),
     });
@@ -64,7 +65,7 @@ export class BurnCustomAssetComponent {
     public submit(): void {
         const { amount } = this.form.getRawValue();
         const {
-            currentWallet: { wallet_id },
+            current_wallet: { wallet_id },
         } = this.variablesService;
         const {
             asset_info: { asset_id, decimal_point },

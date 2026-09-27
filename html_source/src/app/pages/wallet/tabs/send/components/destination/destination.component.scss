@@ -1,0 +1,50 @@
+.destination {
+    position: relative;
+}
+
+.actions {
+    display: flex;
+    position: absolute;
+    left: calc(100% + 2rem);
+    top: 6.3rem;
+
+    .duplicate {
+        color: var(--azure-500);
+    }
+
+    .remove {
+        color: var(--red-500);
+    }
+}
+
+.destination-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.6rem;
+
+    .title {
+        text-transform: uppercase;
+        font-weight: 500;
+        font-size: 1.4rem;
+    }
+}
+
+.destination-form {
+    .destination-form__row {
+        display: flex;
+
+        pdc-asset-field,
+        pdc-amount-field {
+            width: 24rem;
+        }
+    }
+
+    ::ng-deep {
+        pdc-asset-field {
+            ng-select {
+                max-width: 24rem;
+            }
+        }
+    }
+}

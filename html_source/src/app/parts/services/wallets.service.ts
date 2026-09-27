@@ -1,11 +1,15 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BackendService } from '@api/services/backend.service';
 import { VariablesService } from '@parts/services/variables.service';
-import { defaultAssetsInfoWhitelist, ResponseGetWalletInfo, Wallet } from '@api/models/wallet.model';
+import { DEFAULT_ASSETS_INFO_WHITELIST, Wallet } from '@api/models/wallet.model';
 import { Router } from '@angular/router';
-import { ParamsCallRpc } from '@api/models/call_rpc.model';
-import { AssetsWhitelistGetResponseData, VerifiedAssetInfoWhitelist } from '@api/models/assets.model';
+import { ResponseCallRpc } from '@api/models/call_rpc.model';
+import { AssetInfo, AssetsInfoWhitelist, AssetsWhitelistGetResponseData, VerifiedAssetInfoWhitelist } from '@api/models/assets.model';
 import { TranslateService } from '@ngx-translate/core';
+import { ResultAliasByAddress } from '@api/models/rpc.models';
+import { map, switchMap, take } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { WalletInfo } from '@api/models/wallet-info.model';
 
 @Injectable({
     providedIn: 'root',
@@ -20,11 +24,33 @@ export class WalletsService {
     }
 
     get currentWallet(): Wallet | null | undefined {
-        return this._variablesService.currentWallet;
+        return this._variablesService.current_wallet;
     }
 
     set currentWallet(value) {
-        this._variablesService.currentWallet = value;
+        this._variablesService.setCurrentWallet(value.wallet_id);
+    }
+
+    get opened_wallet_items(): string[] {
+        const items = new Set([]);
+
+        this.wallets.forEach(({ address, alias_info_list }: Wallet) => {
+            if (alias_info_list.length > 0) {
+                alias_info_list.forEach((alias_info) => {
+                    if (alias_info.alias) {
+                        items.add('@' + alias_info.alias);
+                    } else if (alias_info.address) {
+                        items.add(alias_info.address);
+                    } else {
+                        items.add(address);
+                    }
+                });
+            } else {
+                items.add(address);
+            }
+        });
+
+        return [...items];
     }
 
     constructor(
@@ -33,44 +59,100 @@ export class WalletsService {
         private _translateService: TranslateService,
         private _router: Router,
         private _ngZone: NgZone
-    ) {}
+    ) {
+        this._variablesService.currentPriceForAssets$.subscribe((value) => {
+            this.wallets.forEach((wallet: Wallet) => {
+                wallet.currentPriceForAssets$.next(value);
+            });
+        });
+    }
 
     addWallet(wallet: Wallet): void {
-        const { wallet_id, staking } = wallet;
-        const { verifiedAssetInfoWhitelist$ } = this._variablesService;
+        const { staking, address, name } = wallet;
+        const {
+            verifiedAssetInfoWhitelist,
+            settings: { localBlacklistsOfVerifiedAssetsByWallets },
+        } = this._variablesService;
 
         if (staking) {
-            const message = this._translateService.instant('STAKING.WALLET_STAKING_ON', { value: wallet.alias?.name ?? wallet.name });
+            const message = this._translateService.instant('STAKING.WALLET_STAKING_ON', { value: wallet.alias_info?.alias ?? wallet.name });
             this._backendService.show_notification('Wallet staking on', message);
         }
 
-        this._variablesService.wallets.push(wallet);
-        this.updateWalletInfo(wallet_id);
-        this.setVerifiedAssetInfoWhitelist(verifiedAssetInfoWhitelist$.value);
-    }
-
-    loadAssetsInfoWhitelist(wallet_id: number): void {
-        const wallet = this.getWalletById(wallet_id);
-
-        if (!wallet) {
-            console.warn(`You want update assetsWhiteList by wallet_id: (${wallet_id}). But this wallet not uploaded.`);
-            return;
+        if (localBlacklistsOfVerifiedAssetsByWallets[address]) {
+            wallet.localBlacklistVerifiedAssets$.next(localBlacklistsOfVerifiedAssetsByWallets[address]);
         }
 
-        const params: ParamsCallRpc = {
-            jsonrpc: '2.0',
-            id: 0,
-            method: 'assets_whitelist_get',
-            params: {},
-        };
-        this._backendService.call_wallet_rpc([wallet_id, params], (status, response_data: AssetsWhitelistGetResponseData) => {
-            this._ngZone.run(() => {
-                const { result } = response_data;
-                const assetsInfoWhitelist = { ...defaultAssetsInfoWhitelist, ...result };
+        const walletSetting = this._variablesService.settings.wallets.find((w) => w.name === name)?.settings;
+        if (walletSetting) {
+            wallet.settings = walletSetting;
+            wallet.settingsChanged$.next(walletSetting);
+        }
 
-                wallet.assetsInfoWhitelist = assetsInfoWhitelist;
-                wallet.assetsInfoWhitelist$.next(assetsInfoWhitelist);
+        this._variablesService.wallets.push(wallet);
+        this.updateWalletInfo(wallet);
+        this.loadAliasInfoList(wallet);
+        this.setVerifiedAssetInfoWhitelist(verifiedAssetInfoWhitelist);
+    }
+
+    loadAssetsInfoWhitelist(wallet: Wallet): void {
+        const { wallet_id } = wallet;
+        this._backendService
+            .getAssetsWhitelist(wallet_id)
+            .pipe(
+                switchMap((response_data: AssetsWhitelistGetResponseData) => {
+                    const { result } = response_data;
+                    const assetsInfoWhitelist = { ...DEFAULT_ASSETS_INFO_WHITELIST, ...result };
+
+                    const updateAssetInfoList = (assetInfoList: AssetInfo[] | undefined): Observable<AssetInfo[]> => {
+                        if (!assetInfoList || assetInfoList.length === 0) {
+                            return of([]);
+                        }
+                        const requests = assetInfoList.map((assetInfo) =>
+                            this._backendService.getAssetInfo(assetInfo.asset_id).pipe(
+                                map((response) => {
+                                    if (response.result && response.result.status === 'OK') {
+                                        return { ...assetInfo, ...response.result.asset_descriptor };
+                                    }
+                                    return assetInfo;
+                                }),
+                                take(1)
+                            )
+                        );
+                        return forkJoin(requests);
+                    };
+
+                    return forkJoin({
+                        local_whitelist: updateAssetInfoList(assetsInfoWhitelist.local_whitelist),
+                        global_whitelist: updateAssetInfoList(assetsInfoWhitelist.global_whitelist),
+                        own_assets: updateAssetInfoList(assetsInfoWhitelist.own_assets),
+                    });
+                }),
+                take(1)
+            )
+            .subscribe((updatedAssetsInfoWhitelist: AssetsInfoWhitelist) => {
+                wallet.assetsInfoWhitelist = updatedAssetsInfoWhitelist;
+                wallet.assetsInfoWhitelist$.next(updatedAssetsInfoWhitelist);
             });
+    }
+
+    loadAliasInfoList(wallet: Wallet): void {
+        const params = {
+            id: 0,
+            jsonrpc: '2.0',
+            method: 'get_alias_by_address',
+            params: wallet.address,
+        };
+        this._backendService.call_rpc(params, (status: boolean, response_data: ResponseCallRpc<ResultAliasByAddress>) => {
+            this._ngZone.run(() => {
+                wallet.alias_info_list = response_data?.result?.alias_info_list?.filter(Boolean) ?? [];
+            });
+        });
+    }
+
+    loadAliasInfoListForWallets(): void {
+        this.wallets.forEach((wallet: Wallet) => {
+            this.loadAliasInfoList(wallet);
         });
     }
 
@@ -82,33 +164,39 @@ export class WalletsService {
 
     getWalletById(wallet_id: number): Wallet | undefined {
         const { wallets } = this._variablesService;
-        return wallets.find(w => w.wallet_id === wallet_id);
+        return wallets.find((w) => w.wallet_id === wallet_id);
     }
 
-    updateWalletInfo(wallet_id: number): void {
-        const wallet = this.getWalletById(wallet_id);
+    getOpenedWalletByAddress(address: string): Wallet | undefined {
+        const { wallets } = this._variablesService;
+        return wallets.find((w) => w.address === address);
+    }
 
-        if (!wallet) {
-            console.warn(`You want update walletInfo by wallet_id: (${wallet_id}). But this wallet not uploaded.`);
-            return;
-        }
-        const callback: (status: boolean, response_data: ResponseGetWalletInfo) => void = (status, response_data) => {
+    updateWalletInfo(wallet: Wallet): void {
+        const { wallet_id } = wallet;
+
+        const callback: (status: boolean, response_data: WalletInfo) => void = (status, response_data) => {
             this._ngZone.run(() => {
                 if (status) {
-                    const { balances } = response_data;
+                    const { balances, current_pos_attempts, est_iterations_per_pos_block } = response_data;
                     wallet.balances = balances;
+                    wallet.current_pos_attempts = current_pos_attempts;
+                    wallet.est_iterations_per_pos_block = est_iterations_per_pos_block;
+                    this._variablesService.posStatusUpdated$.next(wallet.wallet_id);
+
+                    this._variablesService.loadCurrentPriceForAssetIds(wallet.balances.map(({ asset_info: { asset_id } }) => asset_id));
                 }
             });
         };
 
         this._backendService.getWalletInfo(wallet_id, callback);
 
-        this.loadAssetsInfoWhitelist(wallet_id);
+        this.loadAssetsInfoWhitelist(wallet);
     }
 
     closeWallet(wallet_id: number): void {
         const callback = async (): Promise<void> => {
-            this.wallets = this.wallets.filter(w => w.wallet_id !== wallet_id);
+            this.wallets = this.wallets.filter((w) => w.wallet_id !== wallet_id);
 
             await this._ngZone.run(async () => {
                 let url = '/';

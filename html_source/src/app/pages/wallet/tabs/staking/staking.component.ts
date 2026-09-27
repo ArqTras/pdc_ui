@@ -4,9 +4,9 @@ import { Chart } from 'angular-highcharts';
 import { BackendService } from '@api/services/backend.service';
 import { IntToMoneyPipe } from '@parts/pipes/int-to-money-pipe/int-to-money.pipe';
 import { BigNumber } from 'bignumber.js';
-import { combineLatest, skip, Subject } from 'rxjs';
+import { combineLatest, Subject } from 'rxjs';
 import * as Highcharts from 'highcharts';
-import { debounceTime, delay, filter, take, takeUntil, tap } from 'rxjs/operators';
+import { debounceTime, delay, take, takeUntil, tap } from 'rxjs/operators';
 import { NonNullableFormBuilder } from '@angular/forms';
 
 type TPeriod = '1 week' | '2 week' | '1 month' | '3 month' | '6 month' | '1 year' | 'All';
@@ -72,14 +72,7 @@ const groupItems: IGroupItem[] = [
 @Component({
     selector: 'app-staking',
     templateUrl: './staking.component.html',
-    styles: [
-        `
-            :host {
-                width: 100%;
-                height: auto;
-            }
-        `,
-    ],
+    styleUrls: ['staking.component.scss'],
 })
 export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
     public readonly variablesService: VariablesService = inject(VariablesService);
@@ -95,7 +88,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
 
     get isShowStagingSwitch(): boolean {
         const {
-            currentWallet: { is_watch_only, is_auditable },
+            current_wallet: { is_watch_only, is_auditable },
         } = this.variablesService;
         const condition1: boolean = !is_auditable && !is_watch_only;
         const condition2: boolean = is_auditable && !is_watch_only;
@@ -249,7 +242,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
         this.chart.ref$
             .pipe(
                 delay(50),
-                tap(ref => ref.reflow()),
+                tap((ref) => ref.reflow()),
                 delay(50),
                 take(1)
             )
@@ -287,7 +280,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private _updatePendingList(newHeight: number): void {
-        this.pending.list = this.pending.list.filter(item => newHeight - item.h < 10);
+        this.pending.list = this.pending.list.filter((item) => newHeight - item.h < 10);
         this.pending.total = this.pending.list.reduce((total, item) => total.plus(item.a), new BigNumber(0));
     }
 
@@ -296,7 +289,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
             next: () => {
                 this._getMiningHistory();
                 this._changePeriod();
-            }
+            },
         });
     }
 
@@ -377,7 +370,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private _getMiningHistory(): void {
-        const wallet = this.variablesService.currentWallet;
+        const wallet = this.variablesService.current_wallet;
 
         const { wallet_id, loaded } = wallet;
 
@@ -403,7 +396,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
             return;
         }
 
-        data.mined_entries.forEach(item => {
+        data.mined_entries.forEach((item) => {
             this._processMinedEntry(item);
         });
 
@@ -427,7 +420,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
 
     private _changePeriod(): void {
         this.chart.ref$.pipe(take(1)).subscribe({
-            next: ref => {
+            next: (ref) => {
                 const formValue = this.filtersForm.getRawValue();
                 const { group, period } = formValue;
                 const currentDate = new Date();
@@ -441,7 +434,7 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
                     '1 year': 365,
                 };
 
-                let data = [];
+                let data: any[];
                 let minDate;
                 const cacheKey = `${group}-${period}`;
                 if (this._cacheData.has(cacheKey)) {
@@ -464,9 +457,9 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
     private _getGroupedData(data: any[], group: TGroup): any[] {
         const groupedData = [];
 
-        data.forEach(item => {
+        data.forEach((item) => {
             const time = this._makeGroupTime(group, new Date(item[0]));
-            const existingItem = groupedData.find(newItem => newItem[0] === time);
+            const existingItem = groupedData.find((newItem) => newItem[0] === time);
 
             if (existingItem) {
                 existingItem[1] = new BigNumber(existingItem[1]).plus(item[1]).toNumber();
@@ -501,4 +494,6 @@ export class StakingComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return null;
     }
+
+    protected readonly Array = Array;
 }

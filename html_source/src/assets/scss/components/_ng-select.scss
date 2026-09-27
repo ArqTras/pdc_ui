@@ -483,11 +483,12 @@ $circle-background: var(--ng-select-circle-background) !default;
 }
 
 .ng-select {
-    &.with-circle {
+    &.select-with-circle {
         .ng-dropdown-panel {
             .ng-option {
                 position: relative;
                 padding: 0.8rem 3rem 0.8rem 0.8rem;
+                margin-left: 1px;
 
                 &:after {
                     position: absolute;
