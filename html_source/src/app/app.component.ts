@@ -67,6 +67,14 @@ export class AppComponent implements OnInit, OnDestroy {
         private _walletsService: WalletsService,
         private _breakpointObserver: BreakpointObserver
     ) {
+        // Theme CSS variables (--main-background, etc.) only exist under
+        // .dark/.light. Apply the default before QWebChannel so the preloader
+        // is visible if the backend bridge is slow.
+        this._renderer2.setAttribute(
+            document.documentElement,
+            'class',
+            this.variablesService.settings.isDarkTheme ? 'dark' : 'light'
+        );
         this._initTranslate();
         this._initResponsiveClasses();
     }
