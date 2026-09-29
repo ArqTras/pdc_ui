@@ -17,9 +17,9 @@
     --synchronization-progress-bar-container-background: rgba(0, 0, 0, 0.1);
     --dialog-background: #ffffff;
     --block-sync: #505274;
-    --control-alias-wallet-background: #1f8feb1a;
+    --control-alias-wallet-background: #1e30f31a;
     --control-alias-wallet-text: var(--main-text);
-    --count-text: #1f8feb;
+    --count-text: #1e30f3;
 
     // sidebar
     --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(252, 252, 252, 0) 0%, #fcfcfc 100%);
@@ -28,48 +28,48 @@
     // auth
     --auth-card-background: #fcfcfc;
     --auth-card-form-background: #ffffff;
-    --auth-card-form-border: 1px solid #1f8feb33;
+    --auth-card-form-border: 1px solid #1e30f333;
 
     // form
     --form-card-background: #f0f6fb;
 
     // ng-select
     --ng-select-bg: #dbecfa;
-    --ng-select-border: #1f8feb40;
-    --ng-select-highlight: #1f8feb10;
-    --ng-select-circle-border: 1px solid #1f8feb50;
-    --ng-select-circle-background: #1f8feb;
+    --ng-select-border: #1e30f340;
+    --ng-select-highlight: #1e30f310;
+    --ng-select-circle-border: 1px solid #1e30f350;
+    --ng-select-circle-background: #1e30f3;
 
     // field
     --input-background: #ffffff;
     --input-color: var(--blue-900);
-    --input-placeholder: #0c0c3a4d;
-    --border: 1px solid #1f8feb66;
-    --border-not-empty: 1px solid #1f8feb99;
-    --border-disabled: 1px solid #1f8feb66;
+    --input-placeholder: #05060d4d;
+    --border: 1px solid #1e30f366;
+    --border-not-empty: 1px solid #1e30f399;
+    --border-disabled: 1px solid #1e30f366;
     --border-error: 1px solid var(--red-600);
-    --hint-text: #0c0c3a99;
+    --hint-text: #05060d99;
 
     // field amount
-    --amount-ticker-text: #0c0c3a99;
-    --amount-btn-revers-background: #1f8feb33;
+    --amount-ticker-text: #05060d99;
+    --amount-btn-revers-background: #1e30f333;
 
     // checkbox
-    --checkbox-border: 1px solid #1f8feb66;
-    --checkbox-hover-border: 1px solid #1f8feb99;
-    --checkbox-active-border: 1px solid #1f8feb99;
-    --checkbox-checked-background: #1f8feb;
+    --checkbox-border: 1px solid #1e30f366;
+    --checkbox-hover-border: 1px solid #1e30f399;
+    --checkbox-active-border: 1px solid #1e30f399;
+    --checkbox-checked-background: #1e30f3;
 
     // switch
     --switch-on-background: var(--aqua-500);
-    --switch-off-background: #0c0c3a1a;
+    --switch-off-background: #05060d1a;
     --switch-circle-background: var(--white-500);
 
     //wallet
     --wallet-background: #dbebf9;
     --wallet-active-background: var(--gradientAquaToBlue);
-    --wallet-border: 1px solid #1f8feb00;
-    --wallet-border-color-hover: #1f8feb;
+    --wallet-border: 1px solid #1e30f300;
+    --wallet-border-color-hover: #1e30f3;
     --wallet-auditable-watch-only-background: radial-gradient(100% 246.57% at 0% 0%, #af80fe 0%, #8756fe 100%);
     --wallet-auditable-active-background: var(--gradientAmethystToPurpurle);
     --wallet-watch-only-active-background: var(--gradientAmethystToPurpurle);
@@ -79,7 +79,7 @@
     --wallet-text: var(--blue-900);
 
     // table
-    --table-thead-bg: #1f8feb4d;
+    --table-thead-bg: #1e30f34d;
     --table-row-bg: #dbecf9;
     --table-info-border-color: #d9dfe8;
 
@@ -89,13 +89,13 @@
     --table-info-label-background: #f0f6fb;
 
     // buttons
-    --btn-icon-background: #1f8feb1a;
-    --btn-icon-hover-background: #1f8feb4d;
+    --btn-icon-background: #1e30f31a;
+    --btn-icon-hover-background: #1e30f34d;
 
     // list
     --list-background: #f9fcff;
-    --list-border: 1px solid #1f8feb80;
-    --list-item-hover-background: #1f8feb1a;
+    --list-border: 1px solid #1e30f380;
+    --list-item-hover-background: #1e30f31a;
 
     // tooltip
     --tooltip-background: #8dbee8;
@@ -120,11 +120,11 @@
     --block-sync: #a8abb5;
     --control-alias-wallet-background: #ffffff1a;
     --control-alias-wallet-text: var(--main-text);
-    --count-text: #1f8feb;
+    --count-text: #1e30f3;
 
     // sidebar
-    --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(15, 32, 85, 0) 0%, #0f2055 100%);
-    --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(15, 32, 85, 0) 0%, #0f2055 100%);
+    --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(12, 16, 36, 0) 0%, #0c1024 100%);
+    --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(12, 16, 36, 0) 0%, #0c1024 100%);
 
     // auth
     --auth-card-background: var(--blue-700);
@@ -153,7 +153,7 @@
 
     // field amount
     --amount-ticker-text: #ffffff60;
-    --amount-btn-revers-background: #1f8feb33;
+    --amount-btn-revers-background: #1e30f333;
 
     // checkbox
     --checkbox-border: 1px solid #ffffff33;

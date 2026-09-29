@@ -19,6 +19,20 @@ app-synchronization-status {
     padding: 2rem;
     border-radius: 0.8rem;
     background-color: var(--auth-card-background);
+
+    ::ng-deep pdc-logo .logo {
+        max-width: 16rem;
+        max-height: 4.5rem;
+        overflow: hidden;
+        opacity: 1;
+
+        img {
+            max-height: 4.5rem;
+            width: auto;
+            opacity: 1;
+            filter: none;
+        }
+    }
 }
 
 .auth-card-form {

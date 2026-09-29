@@ -4,14 +4,14 @@
     --red-500: #ff6767;
     --red-100: #ffcbcb;
 
-    // blue
-    --blue-900: #0c0c3a;
-    --blue-800: #0c1243;
-    --blue-700: #0f2055;
-    --blue-500: #11316b;
-    --blue-450: #144182;
-    --blue-400: rgba(31, 143, 235, 0.3);
-    --blue-300: rgba(31, 143, 235, 0.15);
+    // blue — aligned with privacydatacoin.com / pdc.supportcryptonight.com
+    --blue-900: #05060d;
+    --blue-800: #07091a;
+    --blue-700: #0c1024;
+    --blue-500: #10132b;
+    --blue-450: #18204a;
+    --blue-400: rgba(30, 48, 243, 0.3);
+    --blue-300: rgba(30, 48, 243, 0.15);
 
     // orange
     --orange-500: #ff6f00;
@@ -24,12 +24,12 @@
     --gray-500: rgba(255, 255, 255, 0.5);
     --gray-400: rgba(255, 255, 255, 0.75);
 
-    // aqua
-    --aqua-500: #16d1d6;
+    // aqua / cyan accent from site --cyan
+    --aqua-500: #3bc7ff;
 
-    // azure
-    --azure-600: #1c72b9;
-    --azure-500: #1f8feb;
+    // azure / primary action from site --blue
+    --azure-600: #121d92;
+    --azure-500: #1e30f3;
 
     // white
     --white-500: #ffffff;
@@ -44,10 +44,10 @@
     --silver-500: #8898b5;
 
     // gradient
-    --gradientAquaToBlue: radial-gradient(100% 188.88% at 0% 0%, #16d1d6 0%, #274cff 100%);
+    --gradientAquaToBlue: radial-gradient(100% 188.88% at 0% 0%, #3bc7ff 0%, #1e30f3 100%);
     --gradientLightAmethystToPurpurle: radial-gradient(100% 246.57% at 0% 0%, #523caa 0%, #3720aa 100%);
     --gradientAmethystToPurpurle: radial-gradient(100% 246.57% at 0% 0%, #a366ff 0%, #601fff 100%);
-    --gradientCyanToTurquoise: radial-gradient(100% 188.88% at 0% 0%, #16d1d6 0%, #169397 100%);
+    --gradientCyanToTurquoise: radial-gradient(100% 188.88% at 0% 0%, #3bc7ff 0%, #1e30f3 100%);
 
     // shadow
     --shadow-gray: 0px 2.11765px 5.64706px rgba(0, 0, 0, 0.15), 0px 2.11765px 0.705882px rgba(0, 0, 0, 0.06);

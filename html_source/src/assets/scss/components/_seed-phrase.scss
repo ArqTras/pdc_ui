@@ -16,7 +16,7 @@
 }
 
 .question-icon {
-    color: #0f2055;
+    color: #0c1024;
 }
 
 .light {
@@ -28,12 +28,12 @@
         .content {
             .item {
                 border: var(--border);
-                background-color: #1f8feb1a;
-                color: #1f8feb;
+                background-color: #1e30f31a;
+                color: #1e30f3;
 
                 .number {
-                    background-color: #1f8feb26;
-                    color: #1f8feb;
+                    background-color: #1e30f326;
+                    color: #1e30f3;
                 }
             }
         }
@@ -42,7 +42,7 @@
 
 .dark {
     .question-icon {
-        color: #0f2055;
+        color: #0c1024;
     }
 
     .seed-phrase {

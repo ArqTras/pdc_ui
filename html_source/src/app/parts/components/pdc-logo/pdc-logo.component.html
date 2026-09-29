@@ -1,6 +1,8 @@
-<ng-container *ngIf="(variablesService.isDarkTheme$ | async) === true; else light">
-    <img alt="pdc-logo" src="assets/icons/blue/pdc-logo.png" />
-</ng-container>
-<ng-template #light>
-    <img alt="pdc-logo" src="assets/icons/blue/light-pdc-logo.png" />
-</ng-template>
+<div class="logo">
+    <ng-container *ngIf="(variablesService.isDarkTheme$ | async) === true; else light">
+        <img alt="pdc-logo" src="assets/icons/blue/pdc-logo.png" />
+    </ng-container>
+    <ng-template #light>
+        <img alt="pdc-logo" src="assets/icons/blue/light-pdc-logo.png" />
+    </ng-template>
+</div>

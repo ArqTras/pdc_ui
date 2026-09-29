@@ -4,10 +4,37 @@
     padding: 2rem;
     width: 23rem;
     height: 100%;
+    overflow: hidden;
     background-color: var(--sidebar-background);
 
     &-header {
         margin-bottom: 1rem;
+        overflow: hidden;
+        max-width: 100%;
+        flex: 0 0 auto;
+
+        ::ng-deep pdc-logo {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+
+            .logo {
+                max-width: 12rem;
+                max-height: 3.2rem;
+                margin: 0;
+
+                img {
+                    max-width: 100%;
+                    max-height: 3.2rem;
+                    width: auto;
+                    height: auto;
+                    object-fit: contain;
+                    object-position: left center;
+                    opacity: 1;
+                    filter: none;
+                }
+            }
+        }
     }
 
     &-content {

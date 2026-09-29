@@ -806,13 +806,13 @@ strong {
   --red-600: rgba(255, 103, 103, 0.75);
   --red-500: #ff6767;
   --red-100: #ffcbcb;
-  --blue-900: #0c0c3a;
-  --blue-800: #0c1243;
-  --blue-700: #0f2055;
-  --blue-500: #11316b;
-  --blue-450: #144182;
-  --blue-400: rgba(31, 143, 235, 0.3);
-  --blue-300: rgba(31, 143, 235, 0.15);
+  --blue-900: #05060d;
+  --blue-800: #07091a;
+  --blue-700: #0c1024;
+  --blue-500: #10132b;
+  --blue-450: #18204a;
+  --blue-400: rgba(30, 48, 243, 0.3);
+  --blue-300: rgba(30, 48, 243, 0.15);
   --orange-500: #ff6f00;
   --gray-900: rgba(255, 255, 255, 0.1);
   --gray-800: rgba(255, 255, 255, 0.2);
@@ -820,17 +820,17 @@ strong {
   --gray-600: rgba(255, 255, 255, 0.4);
   --gray-500: rgba(255, 255, 255, 0.5);
   --gray-400: rgba(255, 255, 255, 0.75);
-  --aqua-500: #16d1d6;
-  --azure-600: #1c72b9;
-  --azure-500: #1f8feb;
+  --aqua-500: #3bc7ff;
+  --azure-600: #121d92;
+  --azure-500: #1e30f3;
   --white-500: #ffffff;
   --black-300: rgba(0, 0, 0, 0.6);
   --amethyst-500: #9a69f7;
   --silver-500: #8898b5;
-  --gradientAquaToBlue: radial-gradient(100% 188.88% at 0% 0%, #16d1d6 0%, #274cff 100%);
+  --gradientAquaToBlue: radial-gradient(100% 188.88% at 0% 0%, #3bc7ff 0%, #1e30f3 100%);
   --gradientLightAmethystToPurpurle: radial-gradient(100% 246.57% at 0% 0%, #523caa 0%, #3720aa 100%);
   --gradientAmethystToPurpurle: radial-gradient(100% 246.57% at 0% 0%, #a366ff 0%, #601fff 100%);
-  --gradientCyanToTurquoise: radial-gradient(100% 188.88% at 0% 0%, #16d1d6 0%, #169397 100%);
+  --gradientCyanToTurquoise: radial-gradient(100% 188.88% at 0% 0%, #3bc7ff 0%, #1e30f3 100%);
   --shadow-gray: 0px 2.11765px 5.64706px rgba(0, 0, 0, 0.15), 0px 2.11765px 0.705882px rgba(0, 0, 0, 0.06);
   --shadow-black-300: 0 0 1rem var(--black-300);
   --chartOptionsBackgroundColor: #2b3644;
@@ -854,41 +854,41 @@ strong {
   --synchronization-progress-bar-container-background: rgba(0, 0, 0, 0.1);
   --dialog-background: #ffffff;
   --block-sync: #505274;
-  --control-alias-wallet-background: #1f8feb1a;
+  --control-alias-wallet-background: #1e30f31a;
   --control-alias-wallet-text: var(--main-text);
-  --count-text: #1f8feb;
+  --count-text: #1e30f3;
   --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(252, 252, 252, 0) 0%, #fcfcfc 100%);
   --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(252, 252, 252, 0) 0%, #fcfcfc 100%);
   --auth-card-background: #fcfcfc;
   --auth-card-form-background: #ffffff;
-  --auth-card-form-border: 1px solid #1f8feb33;
+  --auth-card-form-border: 1px solid #1e30f333;
   --form-card-background: #f0f6fb;
   --ng-select-bg: #dbecfa;
-  --ng-select-border: #1f8feb40;
-  --ng-select-highlight: #1f8feb10;
-  --ng-select-circle-border: 1px solid #1f8feb50;
-  --ng-select-circle-background: #1f8feb;
+  --ng-select-border: #1e30f340;
+  --ng-select-highlight: #1e30f310;
+  --ng-select-circle-border: 1px solid #1e30f350;
+  --ng-select-circle-background: #1e30f3;
   --input-background: #ffffff;
   --input-color: var(--blue-900);
-  --input-placeholder: #0c0c3a4d;
-  --border: 1px solid #1f8feb66;
-  --border-not-empty: 1px solid #1f8feb99;
-  --border-disabled: 1px solid #1f8feb66;
+  --input-placeholder: #05060d4d;
+  --border: 1px solid #1e30f366;
+  --border-not-empty: 1px solid #1e30f399;
+  --border-disabled: 1px solid #1e30f366;
   --border-error: 1px solid var(--red-600);
-  --hint-text: #0c0c3a99;
-  --amount-ticker-text: #0c0c3a99;
-  --amount-btn-revers-background: #1f8feb33;
-  --checkbox-border: 1px solid #1f8feb66;
-  --checkbox-hover-border: 1px solid #1f8feb99;
-  --checkbox-active-border: 1px solid #1f8feb99;
-  --checkbox-checked-background: #1f8feb;
+  --hint-text: #05060d99;
+  --amount-ticker-text: #05060d99;
+  --amount-btn-revers-background: #1e30f333;
+  --checkbox-border: 1px solid #1e30f366;
+  --checkbox-hover-border: 1px solid #1e30f399;
+  --checkbox-active-border: 1px solid #1e30f399;
+  --checkbox-checked-background: #1e30f3;
   --switch-on-background: var(--aqua-500);
-  --switch-off-background: #0c0c3a1a;
+  --switch-off-background: #05060d1a;
   --switch-circle-background: var(--white-500);
   --wallet-background: #dbebf9;
   --wallet-active-background: var(--gradientAquaToBlue);
-  --wallet-border: 1px solid #1f8feb00;
-  --wallet-border-color-hover: #1f8feb;
+  --wallet-border: 1px solid #1e30f300;
+  --wallet-border-color-hover: #1e30f3;
   --wallet-auditable-watch-only-background: radial-gradient(100% 246.57% at 0% 0%, #af80fe 0%, #8756fe 100%);
   --wallet-auditable-active-background: var(--gradientAmethystToPurpurle);
   --wallet-watch-only-active-background: var(--gradientAmethystToPurpurle);
@@ -896,17 +896,17 @@ strong {
   --wallet-watch-only-text: var(--blue-900);
   --wallet-active-text: #ffffff;
   --wallet-text: var(--blue-900);
-  --table-thead-bg: #1f8feb4d;
+  --table-thead-bg: #1e30f34d;
   --table-row-bg: #dbecf9;
   --table-info-border-color: #d9dfe8;
   --table-rounded-corners-border: 1px solid var(--table-info-border-color);
   --table-info-border: 1px solid var(--table-info-border-color);
   --table-info-label-background: #f0f6fb;
-  --btn-icon-background: #1f8feb1a;
-  --btn-icon-hover-background: #1f8feb4d;
+  --btn-icon-background: #1e30f31a;
+  --btn-icon-hover-background: #1e30f34d;
   --list-background: #f9fcff;
-  --list-border: 1px solid #1f8feb80;
-  --list-item-hover-background: #1f8feb1a;
+  --list-border: 1px solid #1e30f380;
+  --list-item-hover-background: #1e30f31a;
   --tooltip-background: #8dbee8;
   --details-background: #dbecfa;
 }
@@ -927,9 +927,9 @@ strong {
   --block-sync: #a8abb5;
   --control-alias-wallet-background: #ffffff1a;
   --control-alias-wallet-text: var(--main-text);
-  --count-text: #1f8feb;
-  --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(15, 32, 85, 0) 0%, #0f2055 100%);
-  --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(15, 32, 85, 0) 0%, #0f2055 100%);
+  --count-text: #1e30f3;
+  --gradient-sidebar-content-wallet-list-top: linear-gradient(0deg, rgba(12, 16, 36, 0) 0%, #0c1024 100%);
+  --gradient-sidebar-content-wallet-list-bottom: linear-gradient(180deg, rgba(12, 16, 36, 0) 0%, #0c1024 100%);
   --auth-card-background: var(--blue-700);
   --auth-card-form-background: var(--blue-500);
   --auth-card-form-border: 1px solid transparent;
@@ -948,7 +948,7 @@ strong {
   --border-error: 1px solid var(--red-600);
   --hint-text: #ffffff60;
   --amount-ticker-text: #ffffff60;
-  --amount-btn-revers-background: #1f8feb33;
+  --amount-btn-revers-background: #1e30f333;
   --checkbox-border: 1px solid #ffffff33;
   --checkbox-hover-border: 1px solid #ffffff66;
   --checkbox-active-border: 1px solid #ffffff66;
@@ -1258,7 +1258,7 @@ button.aqua:not(:disabled):focus, button.aqua:not(:disabled):hover, button.aqua:
 .btn.aqua:not(:disabled):focus,
 .btn.aqua:not(:disabled):hover,
 .btn.aqua:not(:disabled).active {
-  background-color: #13babf;
+  background-color: #2ab3e8;
 }
 button.red, button.danger,
 .btn.red,
@@ -1328,7 +1328,7 @@ button.btn-icon:hover, button.btn-icon:focus,
 }
 .light button.btn-icon.row-options,
 .light .btn.btn-icon.row-options {
-  color: #1f8feb;
+  color: #1e30f3;
 }
 .ngx-contextmenu--dropdown-menu {
   border: none;
@@ -2029,8 +2029,8 @@ i svg {
   }
 }
 .migrate-alert .btn-migrate {
-  background-color: rgba(31, 143, 235, 0.2);
-  color: #1f8feb;
+  background-color: rgba(30, 48, 243, 0.2);
+  color: #1e30f3;
   font-size: 1.8rem;
   line-height: 1.2;
   padding: 0.8rem 2rem;
@@ -2039,7 +2039,7 @@ i svg {
   transition: background-color 0.2s ease;
 }
 .migrate-alert .btn-migrate:hover {
-  background-color: rgba(31, 143, 235, 0.3137254902);
+  background-color: rgba(30, 48, 243, 0.3137254902);
 }
 .migrate-alert .migration-details {
   font-size: 1.6rem;
@@ -2555,22 +2555,22 @@ app-progress-container .progress-bar-container .progress-bar .progress-bar-full 
   white-space: nowrap;
 }
 .question-icon {
-  color: #0f2055;
+  color: #0c1024;
 }
 .light .question-icon {
   color: #ffffff;
 }
 .light .seed-phrase .content .item {
   border: var(--border);
-  background-color: rgba(31, 143, 235, 0.1019607843);
-  color: #1f8feb;
+  background-color: rgba(30, 48, 243, 0.1019607843);
+  color: #1e30f3;
 }
 .light .seed-phrase .content .item .number {
-  background-color: rgba(31, 143, 235, 0.1490196078);
-  color: #1f8feb;
+  background-color: rgba(30, 48, 243, 0.1490196078);
+  color: #1e30f3;
 }
 .dark .question-icon {
-  color: #0f2055;
+  color: #0c1024;
 }
 .dark .seed-phrase .content .item {
   border: var(--border);
@@ -2794,7 +2794,7 @@ app-synchronization-status {
   color: #ffffff;
 }
 .synchronization-status .update-container .update-btn.standard {
-  background-color: #1f8feb;
+  background-color: #1e30f3;
 }
 .synchronization-status .update-container .update-btn.important {
   background-color: #a366ff;
