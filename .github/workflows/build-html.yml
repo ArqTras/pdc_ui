@@ -16,13 +16,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: npm
-          cache-dependency-path: html_source/package-lock.json
+          node-version: '18.15.0'
 
       - name: Install Dependencies
         working-directory: html_source
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Build to folder html
         working-directory: html_source
