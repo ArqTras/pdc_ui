@@ -1,0 +1,41 @@
+name: Build UI HTML
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: html_source/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: html_source
+        run: npm ci
+
+      - name: Build to folder html
+        working-directory: html_source
+        run: npm run "build --html"
+
+      - name: Package HTML artifact
+        run: |
+          zip -r pdc-ui-html.zip html
+          ls -lh pdc-ui-html.zip
+
+      - name: Upload HTML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdc-ui-html
+          path: pdc-ui-html.zip
+          if-no-files-found: error
